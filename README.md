@@ -1,2 +1,2 @@
 # gosh
-Go module for instantiating Bash environment
+Go module for managing a Bash shell environment
