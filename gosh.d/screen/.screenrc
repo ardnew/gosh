@@ -1,9 +1,0 @@
-term xterm-256color
-startup_message off
-vbell off
-termcapinfo xterm* ti@:te@ # use terminal scroll bar to scroll screen buffer (instead of ^a+[)
-altscreen off # turn on to hide content (e.g. text editor) when leaving fullscreen mode
-windowlist string "%4n %h%=%f" # shows more detailed info than "bash" in window list
-rendition so =00 # hide vertical bars
-caption string "%{03} " # hide horizontal bars
-hardstatus alwayslastline '%{= G}[ %{G}%H %{g}][%= %{= w}%?%-Lw%?%{= R}%n*%f %t%?%{= R}(%u)%?%{= w}%+Lw%?%= %{= g}][ %{y}Load: %l %{g}][ %{B}%Y-%m-%d %{W}%c:%s %{g}]'

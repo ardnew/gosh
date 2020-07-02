@@ -1,0 +1,16 @@
+---
+shell: /bin/bash
+env:
+  - auto:
+    - host.bash
+    - paths.bash
+    - terminal.bash
+    - colors.bash
+    - functions.bash
+    - aliases.bash
+    - prompt.bash
+    - completion.bash
+  - arduino:
+    - arduino-cli.bash
+  - segger:
+    - segger-jlink.bash
