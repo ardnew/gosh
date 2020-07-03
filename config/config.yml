@@ -1,5 +1,6 @@
 ---
 shell: /bin/bash
+args:
 env:
   - auto:
     - host.bash

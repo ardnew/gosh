@@ -3,29 +3,20 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
+	"github.com/ardnew/gosh/cmd/gosh/cli"
 	"github.com/ardnew/gosh/cmd/gosh/config"
+	"github.com/ardnew/gosh/cmd/gosh/exit"
 	"github.com/ardnew/gosh/cmd/gosh/log"
 
-	apexLog "github.com/apex/log"
 	"github.com/ardnew/version"
 )
 
-const (
-	packageName    = "gosh"
-	envConfigName  = "GOSH_CONFIG"
-	fileConfigName = "config.yml"
-	permConfigFile = 0o600
-	permConfigDir  = 0o700
-)
-
-func init() { // NOT FOR PROGRAM LOGIC
+func init() {
 	version.ChangeLog = []version.Change{
 		{ // initializing project version number in ONE location is fine I guess
-			Package: packageName,
+			Package: "gosh",
 			Version: "0.1.0",
 			Date:    "June 30, 2020",
 			Description: []string{
@@ -35,71 +26,45 @@ func init() { // NOT FOR PROGRAM LOGIC
 	}
 }
 
-type parameters struct {
-	configPath string
-	logHandler string
-	debug      bool
-}
-
-func start() *parameters {
-	var param parameters
-	flag.StringVar(&param.configPath, "c", configPathDefault(),
-		fmt.Sprintf("path to the primary configuration file"))
-	flag.StringVar(&param.logHandler, "l", log.LogDefaultIdent.String(),
-		fmt.Sprintf("output log handler (%s)", strings.Join(log.IdentNames(), ", ")))
-	flag.BoolVar(&param.debug, "g", false,
-		fmt.Sprintf("enable debug message logging"))
-	flag.Parse()
-	return &param
-}
-
 func main() {
 
-	if param := start(); flag.Parsed() {
+	appProp := config.AppProperties{
+		PackageName:    "gosh",
+		EnvConfigName:  "GOSH_CONFIG",
+		FileConfigName: "config.yml",
+		ReqEnvName:     "auto",
+		PermConfigFile: 0o600,
+		PermConfigDir:  0o700,
+	}
 
-		var (
-			err error
-			cfg *config.Config
-		)
+	appFlag := config.StartFlags{
+		ConfigPath: config.StringFlag{
+			Flag:   "c",
+			Desc:   fmt.Sprintf("path to the primary configuration file"),
+			Preset: appProp.ConfigPath(),
+		},
+		LogHandler: config.StringFlag{
+			Flag:   "l",
+			Desc:   fmt.Sprintf("output log handler (%s)", strings.Join(log.IdentNames(), ", ")),
+			Preset: log.LogDefaultIdent.String(),
+		},
+		DebugEnabled: config.BoolFlag{
+			Flag:   "g",
+			Desc:   "enable debug message logging",
+			Preset: false,
+		},
+	}
 
-		out := log.NewHandler(os.Stdout, param.logHandler, param.debug)
-
-		defer out.Interface().WithFields(apexLog.Fields{
-			"config": param.configPath,
-		}).Trace("initialization").Stop(&err)
-
-		if err = os.MkdirAll(filepath.Dir(param.configPath), permConfigDir); err != nil {
-			return
+	if param := appFlag.Parse(&appProp); !flag.Parsed() {
+		exit.ExitFlagsNotParsed.HaltAnnotated(nil, "flags not parsed")
+	} else {
+		if ui, err := cli.Start(param); err != nil {
+			exit.ExitCLINotStarted.HaltAnnotated(err, "CLI not started")
+		} else {
+			if err := ui.CreateShell(); err != nil {
+				exit.ExitShellNotCreated.HaltAnnotated(err, "shell not created")
+			}
 		}
-
-		cfg, err = config.ParseFile(param.configPath)
-		if err == nil {
-			out.Interface().WithField("cfg", cfg.String()).Debug("parsed configuration")
-		}
 	}
-}
-
-func configPathDefault() string {
-	osConfigDir := func() string {
-		const configDefault = ".config"
-		config, err := os.UserConfigDir()
-		if err != nil {
-			config = filepath.Join(homeDir(), configDefault)
-		}
-		return filepath.Join(config, packageName)
-	}
-	if config, found := os.LookupEnv(envConfigName); found {
-		return config
-	}
-	return filepath.Join(osConfigDir(), fileConfigName)
-}
-
-func homeDir() string {
-	if home, err := os.UserHomeDir(); err == nil {
-		return home
-	}
-	if home, err := os.Getwd(); err == nil {
-		return home
-	}
-	return "."
+	exit.ExitOK.Halt()
 }

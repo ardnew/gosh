@@ -5,24 +5,28 @@ import (
 	"io"
 	"os"
 
+	"github.com/ardnew/gosh/cmd/gosh/config"
+
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/cli"
 	"github.com/apex/log/handlers/discard"
 	"github.com/apex/log/handlers/json"
 	"github.com/apex/log/handlers/text"
+	// "github.com/juju/errors"
 )
 
 // Handler exposes the primary logging interface to main. Right now we depend on
 // the current logging library, need to encapsulate its functionality.
+// See below: Context()
 type Handler struct {
 	id  Ident
 	ctx log.Interface
 }
 
 // NewHandler generates a logging interface based on user's given parameters.
-func NewHandler(out io.Writer, handler string, debug bool) *Handler {
+func NewHandler(out io.Writer, param *config.Parameters) *Handler {
 
-	id := ParseIdent(handler)
+	id := ParseIdent(param.LogHandler)
 
 	switch id {
 	case LogNull:
@@ -36,7 +40,7 @@ func NewHandler(out io.Writer, handler string, debug bool) *Handler {
 	}
 
 	var ctx log.Interface
-	if debug {
+	if param.DebugEnabled {
 		log.SetLevel(log.DebugLevel)
 		ctx = log.WithFields(log.Fields{
 			"proc": "gosh",
@@ -50,7 +54,7 @@ func NewHandler(out io.Writer, handler string, debug bool) *Handler {
 	return &Handler{id: id, ctx: ctx}
 }
 
-// Interface exposes the actual logging library to main.
-func (lh *Handler) Interface() log.Interface {
+// Context exposes the actual logging library to main. **Ta-da!!
+func (lh *Handler) Context() log.Interface {
 	return lh.ctx
 }

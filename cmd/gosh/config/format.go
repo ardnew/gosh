@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"strings"
+	// "github.com/juju/errors"
 )
 
 type encloser struct {

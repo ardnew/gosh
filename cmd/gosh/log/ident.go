@@ -45,6 +45,8 @@ func ParseIdent(str string) Ident {
 	}
 }
 
+// IdentNames produces a prettified list of quoted identifier strings available
+// to the user for selection as log handler.
 func IdentNames() []string {
 	n := make([]string, LogCountIdent)
 	for i := LogFirstIdent; i < LogCountIdent; i++ {
