@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -50,7 +49,8 @@ func ParseIdent(str string) Ident {
 func IdentNames() []string {
 	n := make([]string, LogCountIdent)
 	for i := LogFirstIdent; i < LogCountIdent; i++ {
-		n[i] = fmt.Sprintf("%q", i.String())
+		// n[i] = fmt.Sprintf("%q", i.String())
+		n[i] = i.String()
 	}
 	return n
 }

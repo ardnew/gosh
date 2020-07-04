@@ -22,7 +22,7 @@ type EnvSource map[string][]byte
 
 // Run executes a new shell with the given parameters and does not return until
 // the shell exits or an error was encountered.
-func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (error, error) {
+func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (shellErr error, cmdErr error) {
 
 	initFile, err := writeEnvToFile(p, l, c, e)
 	if err != nil {
@@ -30,14 +30,18 @@ func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (
 	}
 	defer os.Remove(initFile.Name())
 
-	env := os.Environ()
-	arg := unique(append([]string{c.Shell}, unique(c.Args)...))
-	arg = append(arg, "--rcfile", initFile.Name())
+	var env []string
+	if !p.OrphanEnviron {
+		env = os.Environ()
+	}
+
+	exp := config.NewArgExpansion(initFile.Name())
+	arg := exp.ExpandArgs(unique(append([]string{c.Shell}, c.Args...)))
 
 	l.Context().
 		WithField("shell", c.Shell).
 		WithField("args", fmt.Sprintf("[%s]", strings.Join(arg, ", "))).
-		//WithField("env", fmt.Sprintf("[%s]", strings.Join(env, ", "))).
+		WithField("env", fmt.Sprintf("[%s]", strings.Join(env, ", "))).
 		WithField("dir", p.App.HomeDir()).
 		WithField("stdin", os.Stdin.Name()).
 		WithField("stdout", os.Stdout.Name()).
@@ -59,46 +63,38 @@ func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (
 
 func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (*os.File, error) {
 
-	var (
-		env *os.File
-		cnt int
-		pos int64
-		err error
-	)
+	var env *os.File
+	var err error
 
 	env, err = tempFile(p.App.PackageName + "-")
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 
-	reqName, selName := p.App.ReqEnvName, p.SelEnvName
-	reqBytes, reqFound := (*e)[reqName]
-	selBytes, selFound := (*e)[selName]
+	var cnt int
+	var pos int64
 
-	if reqFound {
-		cnt, err = env.Write(reqBytes)
-		if err != nil {
-			return nil, errors.Trace(err)
+	seen := map[string]int{}
+	for i, sel := range append([]string{p.App.ReqEnvName}, p.SelEnvName...) {
+
+		if _, ok := seen[sel]; ok {
+			continue
 		}
 
-		l.Context().
-			WithField("env", reqName).
-			WithField("size", fmt.Sprintf("%dB", cnt)).
-			WithField("path", fmt.Sprintf("⮔ %s", env.Name())).
-			Debug("selected environment")
-	}
+		seen[sel] = i
+		if bytes, found := (*e)[sel]; found {
+			pos += int64(cnt)
+			cnt, err = env.WriteAt(bytes, pos)
+			if err != nil {
+				return nil, errors.Trace(err)
+			}
 
-	if (reqName != selName) && selFound {
-		pos = int64(cnt)
-		cnt, err = env.WriteAt(selBytes, pos)
-		if err != nil {
-			return nil, errors.Trace(err)
+			l.Context().
+				WithField("env", sel).
+				WithField("size", fmt.Sprintf("%dB", cnt)).
+				WithField("path", fmt.Sprintf("⮔ %s", env.Name())).
+				Info("activated environment")
 		}
-		l.Context().
-			WithField("env", selName).
-			WithField("size", fmt.Sprintf("%dB", cnt)).
-			WithField("path", fmt.Sprintf("⮔ %s", env.Name())).
-			Debug("selected environment")
 	}
 
 	if err = env.Close(); err != nil {

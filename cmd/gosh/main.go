@@ -53,18 +53,21 @@ func main() {
 			Desc:   "enable debug message logging",
 			Preset: false,
 		},
+		// reversed logic for inherit because I suspect inheriting is the preferred
+		// or typical behavior. thus, user adds the flag for atypical behavior.
+		OrphanEnviron: config.BoolFlag{
+			Flag:   "o",
+			Desc:   "do NOT inherit the environment from current process, i.e., orphan",
+			Preset: false,
+		},
 	}
 
 	if param := appFlag.Parse(&appProp); !flag.Parsed() {
 		exit.ExitFlagsNotParsed.HaltAnnotated(nil, "flags not parsed")
-	} else {
-		if ui, err := cli.Start(param); err != nil {
-			exit.ExitCLINotStarted.HaltAnnotated(err, "CLI not started")
-		} else {
-			if err := ui.CreateShell(); err != nil {
-				exit.ExitShellNotCreated.HaltAnnotated(err, "shell not created")
-			}
-		}
+	} else if ui, err := cli.Start(param); err != nil {
+		exit.ExitCLINotStarted.HaltAnnotated(err, "CLI not started")
+	} else if err := ui.CreateShell(); err != nil {
+		exit.ExitShellNotCreated.HaltAnnotated(err, "shell not created")
 	}
 	exit.ExitOK.Halt()
 }

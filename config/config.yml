@@ -1,6 +1,6 @@
 ---
 shell: /bin/bash
-args:
+args: [ --rcfile, __GOSH_INIT__ ]
 env:
   - auto:
     - host.bash

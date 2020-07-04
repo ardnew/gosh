@@ -44,7 +44,7 @@ func NewHandler(out io.Writer, param *config.Parameters) *Handler {
 		log.SetLevel(log.DebugLevel)
 		ctx = log.WithFields(log.Fields{
 			"proc": "gosh",
-			"pid":  fmt.Sprintf("0x%08X", os.Getpid()),
+			"pid":  fmt.Sprintf("%d", os.Getpid()),
 		})
 	} else {
 		log.SetLevel(log.InfoLevel)

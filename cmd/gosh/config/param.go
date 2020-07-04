@@ -10,18 +10,20 @@ import (
 // Parameters represents the global configuration of the application, mostly
 // defined or initialized by command-line arguments.
 type Parameters struct {
-	App          AppProperties
-	ConfigPath   string
-	LogHandler   string
-	DebugEnabled bool
-	SelEnvName   string
+	App           AppProperties
+	ConfigPath    string
+	LogHandler    string
+	DebugEnabled  bool
+	OrphanEnviron bool
+	SelEnvName    []string
 }
 
 // StartFlags contains attributes of the pre-defined command-line flags.
 type StartFlags struct {
-	ConfigPath   StringFlag
-	LogHandler   StringFlag
-	DebugEnabled BoolFlag
+	ConfigPath    StringFlag
+	LogHandler    StringFlag
+	DebugEnabled  BoolFlag
+	OrphanEnviron BoolFlag
 }
 
 // StringFlag contains the attributes of a string type command-line flag.
@@ -45,12 +47,15 @@ func (sf *StartFlags) Parse(app *AppProperties) *Parameters {
 	flag.StringVar(&param.ConfigPath, sf.ConfigPath.Flag, sf.ConfigPath.Preset, sf.ConfigPath.Desc)
 	flag.StringVar(&param.LogHandler, sf.LogHandler.Flag, sf.LogHandler.Preset, sf.LogHandler.Desc)
 	flag.BoolVar(&param.DebugEnabled, sf.DebugEnabled.Flag, sf.DebugEnabled.Preset, sf.DebugEnabled.Desc)
+	flag.BoolVar(&param.OrphanEnviron, sf.OrphanEnviron.Flag, sf.OrphanEnviron.Preset, sf.OrphanEnviron.Desc)
 	flag.Parse()
-	if len(flag.Args()) > 0 {
-		param.SelEnvName = flag.Arg(0)
-	} else {
-		param.SelEnvName = app.ReqEnvName
+
+	// positional arguments are names of environments to load
+	param.SelEnvName = []string{}
+	for _, a := range flag.Args() {
+		param.SelEnvName = append(param.SelEnvName, a)
 	}
+
 	return &param
 }
 
