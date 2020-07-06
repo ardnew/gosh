@@ -36,7 +36,7 @@ func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (
 	}
 
 	exp := config.NewArgExpansion(initFile.Name())
-	arg := exp.ExpandArgs(unique(append([]string{c.Shell}, c.Args...)))
+	arg := exp.ExpandArgs(unique(append([]string{c.Shell}, c.Args...)...)...)
 
 	l.Context().
 		WithField("shell", c.Shell).
@@ -113,7 +113,7 @@ func tempFile(prefix string) (*os.File, error) {
 	return src, nil
 }
 
-func unique(ls []string) []string {
+func unique(ls ...string) []string {
 	seen := map[string]int{}
 	uniq := []string{}
 	for i, a := range ls {

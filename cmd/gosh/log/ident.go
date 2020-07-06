@@ -19,7 +19,7 @@ const (
 	// -- indices --
 	LogCountIdent
 	LogFirstIdent   = LogNull
-	LogDefaultIdent = LogStandard
+	LogDefaultIdent = LogNull
 )
 
 // ParseIdent tries to match the user's given input to an Ident.

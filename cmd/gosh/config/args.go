@@ -51,7 +51,7 @@ func (ae *ArgExpansion) Expand(arg string) string {
 }
 
 // ExpandArgs calls Expand on each element in args.
-func (ae *ArgExpansion) ExpandArgs(args []string) []string {
+func (ae *ArgExpansion) ExpandArgs(args ...string) []string {
 	for i, arg := range args {
 		args[i] = ae.Expand(arg)
 	}

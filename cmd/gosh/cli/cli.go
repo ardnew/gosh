@@ -112,7 +112,7 @@ func (ui *CLI) readEnv() *shell.EnvSource {
 
 			} else {
 				dir := filepath.Join(root, name)
-				source[name] = append(source[name], ui.readEnvMod(dir, src)...)
+				source[name] = append(source[name], ui.readEnvMod(dir, src...)...)
 				ui.Log.Context().
 					WithField("env", name).
 					WithField("size", fmt.Sprintf("%dB", len(source[name]))).
@@ -125,7 +125,7 @@ func (ui *CLI) readEnv() *shell.EnvSource {
 	return &source
 }
 
-func (ui *CLI) readEnvMod(path string, mod []string) []byte {
+func (ui *CLI) readEnvMod(path string, mod ...string) []byte {
 
 	type buf []byte
 
@@ -160,7 +160,7 @@ func (ui *CLI) splitDataRestartFile(selected string) []string {
 	return strings.Fields(selected)
 }
 
-func (ui *CLI) joinDataRestartFile(selected []string) string {
+func (ui *CLI) joinDataRestartFile(selected ...string) string {
 	for i, s := range selected {
 		selected[i] = strings.TrimSpace(s)
 	}

@@ -1,19 +1,5 @@
 #!/bin/bash
 
-# ==============================================================================
-#
-#  file: 000-host.env.bash
-#
-#  date: 19 June 2020
-#
-#  auth: andrew@ardnew.com
-#
-#  desc: host identification declared for all subsequent environment scripts
-#
-# ==============================================================================
-
-# ------------------------------------------------------------- host identity --
-
 host_linux=1
 [[ "${OSTYPE}" = *linux* ]] &&
 	host_kind=${host_linux}
@@ -33,8 +19,6 @@ host_freebsd=4
 host_mswsl=5
 [[ "$( uname -a | tr '[:upper:]' '[:lower:]' )" =~ microsoft ]] &&
 	host_kind=${host_mswsl}
-
-# ----------------------------------------------------------- host inspection --
 
 is-host-linux()   { return ${host_kind} -eq ${host_linux}; }
 is-host-darwin()  { return ${host_kind} -eq ${host_darwin}; }

@@ -1,17 +1,5 @@
 #!/bin/bash
 
-# ==============================================================================
-#
-#  file: completion.bash
-#
-#  date: 19 June 2020
-#
-#  auth: andrew@ardnew.com
-#
-#  desc: shell auto-completion configuration
-#
-# ==============================================================================
-
 global_bash_completion="/usr/share/bash-completion/bash_completion"
 system_bash_completion="/etc/bash_completion"
 

@@ -1,17 +1,5 @@
 #!/bin/bash
 
-# ==============================================================================
-#
-#  file: promptt.bash
-#
-#  date: 19 June 2020
-#
-#  auth: andrew@ardnew.com
-#
-#  desc: defines the bash shell prompt appearance
-#
-# ==============================================================================
-
 # set variable identifying the chroot you work in (used in the prompt below)
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
