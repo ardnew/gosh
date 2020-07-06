@@ -9,11 +9,16 @@ The [`github.com/ardnew/gosh`](https://github.com/ardnew/gosh) repo contains two
 ## 1. [`gosh`](https://github.com/ardnew/gosh/cmd/gosh) 
 
 #### Quickstart
-Ideally, you simply replace your login shell (e.g. `/bin/bash` in `/etc/fstab`) with `/path/to/gosh`, and then configure the gosh runtime. 
-Just to get up and running, I recommend using the [demo included with this repo](https://github.com/ardnew/gosh/config): 
-    1. Simply copy all of the "demo" `config/` contents to your local gosh runtime configuration path, typically located at `~/.config/gosh`.
-    2. Execute `gosh`, and you should see a familiar shell, but what you don't see is that it is being managed by a Go application! 
-    3. To see we are a Go sub-process, re-run with the following command, `gosh -l standard -g`, and you'll see the `gosh` runtime spewing out some debugging information regarding how the shell process was spawned. You'll see more once you close the shell (via `exit` or `^D`)
+> Ideally, you simply replace your login shell (e.g. `/bin/bash` in `/etc/fstab`) with `/path/to/gosh`, and then configure the gosh runtime. 
+>
+> Just to get up and running, I recommend using the [demo included with this repo](https://github.com/ardnew/gosh/config): 
+>
+>     1. Simply copy all of the "demo" `config/` contents to your local gosh runtime configuration path, typically located at `~/.config/gosh`.
+>
+>     2. Execute `gosh`, and you should see a familiar shell, but what you don't see is that it is being managed by a Go application! 
+>
+>     3. To see we are a Go sub-process, re-run with the following command, `gosh -l standard -g`, and you'll see the `gosh` runtime spewing out some debugging information regarding how the shell process was spawned. You'll see more once you close the shell (via `exit` or `^D`)
+>
 
 Anyway, keep an eye out for future documentation that will elaborate how useful the tool is in very common use cases (tmux/screen, compiler toolchain isolation, etc.)
 
