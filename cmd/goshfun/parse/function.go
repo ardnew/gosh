@@ -1,8 +1,10 @@
 package parse
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
+	"strings"
 )
 
 // Function represents the signature or definition of an individual function.
@@ -72,4 +74,88 @@ func (fun *Function) Parse(decl *ast.FuncDecl) *Function {
 	}
 
 	return fun
+}
+
+// ProtoGo returns the signature of this function for the Go interface.
+func (fun *Function) ProtoGo(pkg string) string {
+
+	var sb strings.Builder
+	name, args, rets := fun.elements(false, pkg)
+	sb.WriteString(fmt.Sprintf("func %s(%s)", name, strings.Join(args, ", ")))
+	if len(rets) > 0 {
+		r := strings.Join(rets, ", ")
+		if len(rets) > 1 {
+			r = "(" + r + ")"
+		}
+		sb.WriteRune(' ')
+		sb.WriteString(r)
+	}
+	return sb.String()
+}
+
+// ProtoSh returns the signature of this function for the shell interface.
+func (fun *Function) ProtoSh(pkg string) string {
+
+	var sb strings.Builder
+	name, args, rets := fun.elements(true, pkg)
+	sb.WriteString(name + ":")
+	if len(args) > 0 {
+		sb.WriteString(" " + strings.Join(args, " "))
+	}
+	if len(rets) > 0 {
+		sb.WriteString(fmt.Sprintf(" -> %s", strings.Join(rets, " ")))
+	}
+	return sb.String()
+}
+
+// Prototype returns the signature of this function for either the Go or the
+// shell interface.
+func (fun *Function) Prototype(sh bool, pkg string) string {
+
+	if sh {
+		return fun.ProtoSh(pkg)
+	}
+	return fun.ProtoGo(pkg)
+}
+
+// FullName returns the fully-qualified name of the reciever fun, escaped for
+// use as either Go function or shell command.
+func (fun *Function) FullName(pkg string) string {
+
+	var pf string
+	if pkg = strings.TrimSpace(pkg); "" != pkg {
+		pf = strings.ReplaceAll(pkg, "/", "_") + "_"
+	}
+	return pf + fun.Name
+}
+
+// MinArgs returns the minimum number of arguments required to invoke this
+// function.
+func (fun *Function) MinArgs() int {
+
+	min := len(fun.Arg)
+	if min > 0 {
+		lastArg := fun.Arg[min-1]
+		if len(lastArg.Ref) > 0 && RefEllipses == lastArg.Ref[0] {
+			min = min - 1
+		}
+	}
+	return min
+}
+
+func (fun *Function) elements(sh bool, pkg string) (name string, args, rets []string) {
+
+	name = fun.FullName(pkg)
+
+	args = make([]string, len(fun.Arg))
+	for i, a := range fun.Arg {
+		args[i] = fmt.Sprintf("%s", a.Prototype(sh))
+	}
+
+	rets = make([]string, len(fun.Ret))
+	for i, r := range fun.Ret {
+		rets[i] = fmt.Sprintf("%s", r.Prototype(sh))
+	}
+
+	return name, args, rets
 }

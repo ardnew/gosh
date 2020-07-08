@@ -49,6 +49,13 @@ func (ret *Return) Parse(expr ast.Expr) *Return {
 
 func (ret *Return) String() string {
 
+	return ret.ProtoSh()
+}
+
+// ProtoGo returns the signature used for this Return value for the Go
+// interface.
+func (ret *Return) ProtoGo() string {
+
 	var sb strings.Builder
 	if ret.Name != "" {
 		sb.WriteString(ret.Name)
@@ -60,4 +67,34 @@ func (ret *Return) String() string {
 	sb.WriteString(ret.Type)
 	return sb.String()
 
+}
+
+// ProtoSh returns the signature used for this Return value for the shell
+// interface.
+func (ret *Return) ProtoSh() string {
+
+	var sb strings.Builder
+	for _, ref := range ret.Ref {
+		switch ref {
+		case RefArray, RefEllipses:
+			sb.WriteString(RefEllipses.Symbol())
+			break
+		}
+	}
+	if ret.Name != "" {
+		sb.WriteString(ret.Name)
+	} else {
+		sb.WriteString(ret.Type)
+	}
+	return sb.String()
+
+}
+
+// Prototype returns the signature used for this Return value for either the
+// shell interface or the Go interface.
+func (ret *Return) Prototype(sh bool) string {
+	if sh {
+		return ret.ProtoSh()
+	}
+	return ret.ProtoGo()
 }
