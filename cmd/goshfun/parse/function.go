@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"path/filepath"
 	"strings"
 )
 
@@ -118,13 +119,24 @@ func (fun *Function) Prototype(sh bool, pkg string) string {
 	return fun.ProtoGo(pkg)
 }
 
-// FullName returns the fully-qualified name of the reciever fun, escaped for
+// FullName returns the fully-qualified name of the receiver fun, escaped for
 // use as either Go function or shell command.
 func (fun *Function) FullName(pkg string) string {
 
 	var pf string
 	if pkg = strings.TrimSpace(pkg); "" != pkg {
-		pf = strings.ReplaceAll(pkg, "/", "_") + "_"
+		pf = strings.ReplaceAll(pkg, "/", "ノ") + "ㆍ"
+	}
+	return pf + fun.Name
+}
+
+// ImportedName returns the import-qualified name of the receiver fun.
+func (fun *Function) ImportedName(pkg string) string {
+
+	var pf string
+	if pkg = strings.TrimSpace(pkg); "" != pkg {
+		_, pf = filepath.Split(pkg)
+		pf += "."
 	}
 	return pf + fun.Name
 }
@@ -135,9 +147,10 @@ func (fun *Function) MinArgs() int {
 
 	min := len(fun.Arg)
 	if min > 0 {
-		lastArg := fun.Arg[min-1]
-		if len(lastArg.Ref) > 0 && RefEllipses == lastArg.Ref[0] {
-			min = min - 1
+		for _, arg := range fun.Arg {
+			if len(arg.Ref) > 0 && (RefEllipses == arg.Ref[0] || RefArray == arg.Ref[0]) {
+				min--
+			}
 		}
 	}
 	return min

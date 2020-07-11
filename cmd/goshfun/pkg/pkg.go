@@ -85,7 +85,7 @@ func (p *Pkg) Parse(prefix ...string) (map[string]*parse.Package, error) {
 	// we currently only support types with primitive bases (slices, ellipses, or
 	// pointers to any of these are OK too)
 	var primitive = []string{
-		"bool", "byte", "rune", "string",
+		"rune", "string", "error", "bool", "byte",
 		"int", "int8", "int16", "int32", "int64",
 		"uint", "uint8", "uint16", "uint32", "uint64",
 		"uintptr",
