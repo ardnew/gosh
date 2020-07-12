@@ -118,4 +118,4 @@ And all available command-line arguments for the `goshfun`-generated executable 
 |Flag name|Type|Description|
 |:--:|:--:|:----------|
 |`-0`|`bool`|delimit ouput parameters with a null byte (`\0`) instead of a newline (`\n`).|
-|`-f`|`string`|func invoke function named `FUNC`|
+|`-f`|`string`|invoke function with given name|
