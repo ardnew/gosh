@@ -8,7 +8,7 @@ The [`github.com/ardnew/gosh`](https://github.com/ardnew/gosh) repo contains two
 
 ---
 
-## 1. [`gosh`](https://github.com/ardnew/gosh/cmd/gosh) 
+## 1. [`gosh`](https://github.com/ardnew/gosh/tree/master/cmd/gosh) 
 
 ### Usage
 
@@ -73,7 +73,7 @@ env:
 ```
 ---
 
-## 2. [`goshfun`](https://github.com/ardnew/gosh/cmd/goshfun) 
+## 2. [`goshfun`](https://github.com/ardnew/gosh/tree/master/cmd/goshfun) 
 
 The intent of `goshfun` is to automatically generate a command-line interface to much of the Go standard library. This means functions like `strings.Join`, `path/filepath.Split`, `math.Min`/`math.Max`, and a vast number of other really useful utilities, some of which not directly available in most modern shells, can be used directly from the command-line, using shell syntax, without having to write and compile any Go code whatsoever.
 
