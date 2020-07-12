@@ -10,19 +10,19 @@ The [`github.com/ardnew/gosh`](https://github.com/ardnew/gosh) repo contains two
 
 ## 1. [`gosh`](https://github.com/ardnew/gosh/cmd/gosh) 
 
-#### Usage
+### Usage
 
 The `gosh` application dynamically creates an initialization file (e.g. `~/.bashrc`, `~/.zshrc`) for your shell by including the contents of various shell scripts located in directory `~/.config/gosh`. You indicate which files get included by configuring the YAML file located at `~/.config/gosh/config.yml` (or specified with `-c` flag).
 
 Regardless of additional arguments, `gosh` will *always* include the files listed under the `auto` key in the configuration YAML file, so make sure its contents are universally applicable to all profiles you intend to define. 
 
-You can add other keys besides `auto` to have custom shell "profiles", which is useful if you need to change `$PATH` (for various cross-compiler environments, for example), or you want a fancy `$PS1` for different `tmux`/`screen` sessions/windows/panes. 
+You can add other keys besides `auto` to have custom shell "profiles", which is useful if you need to change `$PATH` (for various cross-compiler environments, for example), or you want a fancy `$PS1` for different `tmux`/`screen` sessions. 
 
 To specify which profiles to load, simply name them as arguments at invocation, e.g, `gosh arduino` will load the files listed under the `arduino` key defined in `config.yml`, and found in subdirectory `~/.config/gosh/arduino`. (Remember, it also always imports first the files defined under `auto` and found in `~/.config/gosh/auto`.)
 
 Also in `config.yml`, there are options for specifying which shell to launch (`/bin/bash`, `/bin/zsh`, etc.) along with their associated startup flags.
 
-#### Quickstart
+### Quickstart
 
 You simply call `gosh [profile]` from your existing shell to start a new session (see [Usage](https://github.com/ardnew/gosh/README.md#usage) above for info about profiles).
 
@@ -32,7 +32,7 @@ Just to get up and running, I recommend using the [demo included with this repo]
 
 1. Install package: `go get -v github.com/ardnew/gosh/cmd/gosh`
 
-2. Copy the contents of [config](https://github.com/ardnew/gosh/config) into `~/.config/gosh`.
+2. Copy the contents of [$GOPATH/src/github.com/ardnew/gosh/config/](https://github.com/ardnew/gosh/config) into `~/.config/gosh`.
 
 3. Execute `gosh`, and you should see a familiar shell, but what you don't see is that it is being managed by a Go application! 
 
@@ -47,7 +47,7 @@ All available command-line arguments:
 |`-l`|`string`|output log handler (`null`, `standard`, `ascii`, `json`) (default `null`)|
 |`-o`|`bool`|do NOT inherit the environment from current process, i.e., orphan|
 
-##### Configuration
+### Configuration
 
 The following example configuration file demonstrates **a.**) how to specify which shell to invoke, **b.**) how to add flags to it (and how to refer to the dynamically-generated initialization script, **c.**) how to define a profile (and its directory name), and **d.**) how to define which files to include when loading a profile.
 
@@ -79,7 +79,7 @@ The `goshfun` utility is an altogether different beast, but for the purpose of i
 
 The intent of `goshfun` is to automatically generate a command-line interface to much of the Go standard library. This means functions like `strings.Join`, `path/filepath.Split`, `math.Min`/`math.Max`, and a vast number of other really useful utilities, some of which not directly available in most modern shells, can be used directly from the command-line, using shell syntax, without having to write and compile any Go code whatsoever.
 
-#### Quickstart
+### Quickstart
 
 Running `goshfun` without any arguments will generate shell interfaces for the default packages `strings`, `math`, and `path/filepath`.
 
@@ -89,7 +89,7 @@ Running `goshfun` without any arguments will generate shell interfaces for the d
 
 At this point you now have a shell interface for all of the functions it printed during generation. You can review those functions by just running `fun` without any arguments (or run `fun -h`).
 
-#### Usage
+### Usage
 
 There are two ways to invoke one of the Go library functions packaged into the `fun` executable:
 
@@ -104,3 +104,18 @@ Note that the base function name `Split` exists in multiple packages (`strings` 
 Alternatively, in the same spirit as Busybox, you can create a symlink whose name matches the desired function pointing to the `fun` executable. Calling the symlink will call the function with matching name. Using the previous example `path/filepath.Split`, you can create any one of the following symlinks: `ln -s fun Split`, `ln -s fun filepath.Split`, or `ln -s fun path.filepath.Split`. Then simply calling the symlink, e.g., `filepath.Split`, is effectively the same as calling `fun -f filepath.Split`.
 
 The same condition regarding ambiguous function names mentioned above applies to symlinks as well.
+
+All available command-line arguments for `goshfun`:
+
+|Flag|Type|Description|
+|:--:|:--:|:----------|
+|`-out`|`string`|generated Go source will be written to file `DIR/main.go` (default `fun`)|
+|`-pkg`|`string`|generate interfaces for functions from package path. may be specified multiple times. (default `strings`,`math`,`path/filepath`)|
+|`-root`|`string`|path to GOROOT (must contain src) (default `/usr/local/src/go/goroot`)|
+
+And all available command-line arguments for the `goshfun`-generated executable (`fun` by default):
+
+|Flag|Type|Description|
+|:--:|:--:|:----------|
+|`-0`|`bool`|delimit ouput parameters with a null byte (`\0`) instead of a newline (`\n`).|
+|`-f`|`string`|func invoke function named `FUNC`|
