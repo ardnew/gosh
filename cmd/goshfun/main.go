@@ -37,7 +37,7 @@ func main() {
 	)
 
 	flag.StringVar(&argRoot, "root", build.Default.GOROOT, "path to GOROOT (must contain src)")
-	flag.Var(&argPkg, "pkg", "generate interfaces for functions from package `path`. may be specified multiple times. (default \"strings\",\"path/filepath\")")
+	flag.Var(&argPkg, "pkg", "generate interfaces for functions from package `path`. may be specified multiple times. (default \"strings\",\"math\",\"path/filepath\")")
 	flag.StringVar(&argOut, "out", outputPath(), "generated Go source will be written to file `dir`/main.go")
 	flag.Parse()
 
