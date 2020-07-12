@@ -30,9 +30,11 @@ You simply call `gosh [profile]` from your existing shell to start a new session
 
 Just to get up and running, I recommend using the [demo included with this repo](https://github.com/ardnew/gosh/config). Installation is easy:
 
-1. Copy the contents of [config](https://github.com/ardnew/gosh/config) into `~/.config/gosh`.
+1. Install package: `go get -v github.com/ardnew/gosh/cmd/gosh`
 
-2. Execute `gosh`, and you should see a familiar shell, but what you don't see is that it is being managed by a Go application! 
+2. Copy the contents of [config](https://github.com/ardnew/gosh/config) into `~/.config/gosh`.
+
+3. Execute `gosh`, and you should see a familiar shell, but what you don't see is that it is being managed by a Go application! 
 
 To see we are a Go sub-process, re-run `gosh` with the following arguments, `gosh -l standard -g`, and you'll see the `gosh` runtime spewing out some debugging information regarding how the shell process was spawned. You'll see more once you close the shell (via `exit` or `^D`)
 
@@ -73,7 +75,32 @@ env:
 
 ## 2. [`goshfun`](https://github.com/ardnew/gosh/cmd/goshfun) 
 
+The `goshfun` utility is an altogether different beast, but for the purpose of integrating Go with shell environments, it makes sense to include it with the `gosh` project.
+
+The intent of `goshfun` is to automatically generate a command-line interface to much of the Go standard library. This means functions like `strings.Join`, `path/filepath.Split`, `math.Min`/`math.Max`, and a vast number of other really useful utilities, some of which not directly available in most modern shells, can be used directly from the command-line, using shell syntax, without having to write and compile any Go code whatsoever.
+
 #### Quickstart
 
+Running `goshfun` without any arguments will generate shell interfaces for the default packages `strings`, `math`, and `path/filepath`.
 
+1. Install package: `go get -v github.com/ardnew/gosh/cmd/goshfun`
 
+2. Generate Go source code and build for default packages: `goshfun` (by default this will generate an executable in directory `./fun`)
+
+At this point you now have a shell interface for all of the functions it printed during generation. You can review those functions by just running `fun` without any arguments (or run `fun -h`).
+
+#### Usage
+
+There are two ways to invoke one of the Go library functions packaged into the `fun` executable:
+
+1. Use the `-f` flag:
+
+Provide the function name as argument to the `-f` flag as either its base name, exported name, or fully-qualified package export name (replace slashes `/` with periods `.`). For example, the library function `path/filepath.Split` can be called as any of the following: `fun -f Split`, `fun -f filepath.Split`, or `fun -f path.filepath.Split`. 
+
+Note that the base function name `Split` exists in multiple packages (`strings` and `path/filepath`). Currently, no attempt is made to normalize which package is resolved, so simply using `Split` may invoke either one of these functions. Qualify the function with a package name to prevent ambiguous behavior.
+
+2. Symlink the function name:
+
+Alternatively, in the same spirit as Busybox, you can create a symlink whose name matches the desired function pointing to the `fun` executable. Calling the symlink will call the function with matching name. Using the previous example `path/filepath.Split`, you can create any one of the following symlinks: `ln -s fun Split`, `ln -s fun filepath.Split`, or `ln -s fun path.filepath.Split`. Then simply calling the symlink, e.g., `filepath.Split`, is effectively the same as calling `fun -f filepath.Split`.
+
+The same condition regarding ambiguous function names mentioned above applies to symlinks as well.
