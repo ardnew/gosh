@@ -40,7 +40,7 @@ To see we are a Go sub-process, re-run `gosh` with the following arguments, `gos
 
 All available command-line arguments:
 
-|Flag|Type|Description|
+|Flag name|Type|Description|
 |:--:|:--:|:----------|
 |`-c`|`string`|path to the primary configuration file (default `~/.config/gosh/config.yml`)|
 |`-g`|`bool`|enable debug message logging|
@@ -107,7 +107,7 @@ The same condition regarding ambiguous function names mentioned above applies to
 
 All available command-line arguments for `goshfun`:
 
-|Flag|Type|Description|
+|Flag name|Type|Description|
 |:--:|:--:|:----------|
 |`-out`|`string`|generated Go source will be written to file `DIR/main.go` (default `fun`)|
 |`-pkg`|`string`|generate interfaces for functions from package path. may be specified multiple times. (default `strings`,`math`,`path/filepath`)|
@@ -115,7 +115,7 @@ All available command-line arguments for `goshfun`:
 
 And all available command-line arguments for the `goshfun`-generated executable (`fun` by default):
 
-|Flag|Type|Description|
+|Flag name|Type|Description|
 |:--:|:--:|:----------|
 |`-0`|`bool`|delimit ouput parameters with a null byte (`\0`) instead of a newline (`\n`).|
 |`-f`|`string`|func invoke function named `FUNC`|
