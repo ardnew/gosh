@@ -75,8 +75,6 @@ env:
 
 ## 2. [`goshfun`](https://github.com/ardnew/gosh/cmd/goshfun) 
 
-The `goshfun` utility is an altogether different beast, but for the purpose of integrating Go with shell environments, it makes sense to include it with the `gosh` project.
-
 The intent of `goshfun` is to automatically generate a command-line interface to much of the Go standard library. This means functions like `strings.Join`, `path/filepath.Split`, `math.Min`/`math.Max`, and a vast number of other really useful utilities, some of which not directly available in most modern shells, can be used directly from the command-line, using shell syntax, without having to write and compile any Go code whatsoever.
 
 ### Quickstart
