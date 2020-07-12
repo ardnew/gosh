@@ -79,6 +79,7 @@ func (p *Printer) headImports(pkgs map[string]*parse.Package) (imps []string) {
 		"fmt":           true,
 		"os":            true,
 		"path/filepath": true,
+		"sort":          true,
 		"strconv":       true,
 		"strings":       true,
 		"unicode/utf8":  true,
@@ -248,7 +249,15 @@ func main() {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 		} else {
 			if nil != funcRets && len(funcRets) > 0 {
-				for _, out := range funcRets {
+				// locate the last non-empty return value (this avoids printing newlines
+				// for empty error strings)
+				lastRet := -1
+				for i, out := range funcRets {
+					if "" != out {
+						lastRet = i
+					}
+				}
+				for _, out := range funcRets[:lastRet+1] {
 					var output strings.Builder
 					output.WriteString(out)
 					if flagNull {
@@ -278,11 +287,29 @@ func printUsage(name string) {
 	if name == realName || !ok {
 		fmt.Printf("Usage of %s:\n", name)
 		flag.PrintDefaults()
+		sortedPkgs := []string{}
+		for pkg := range functions {
+			sortedPkgs = append(sortedPkgs, pkg)
+		}
+		sort.Slice(sortedPkgs,
+			func(i, j int) bool {
+				return strings.Compare(sortedPkgs[i], sortedPkgs[j]) < 0
+			})
 		fmt.Printf("\nThe following library functions are supported:\n")
-		for pkg, table := range functions {
+		for _, pkg := range sortedPkgs {
+			lt := *functions[pkg]
+			sortedFunc := []string{}
+			for fn := range lt {
+				sortedFunc = append(sortedFunc, fn)
+			}
+			sort.Slice(sortedFunc,
+				func(i, j int) bool {
+					return strings.Compare(sortedFunc[i], sortedFunc[j]) < 0
+				})
 			fmt.Printf("\tpackage %s:\n", pkg)
-			for fn, pr := range *table {
+			for _, fn := range sortedFunc {
 				fmt.Printf("\t\t%s", fn)
+				pr := lt[fn]
 				if "" != pr.args || "" != pr.rets {
 					fmt.Printf(":")
 					if "" != pr.args {
@@ -369,20 +396,15 @@ func (p *Printer) PrintPackage(verbose bool, pkgPath string, pkg *parse.Package)
 			fmt.Fprintf(p.out, "%s\n", ln)
 		}
 		if verbose {
-			fmt.Printf("\t%s", fun.ImportedName(pkgName))
+			fmt.Printf("\tfound: %s", fun.ImportedName(pkgName))
 			_, args, rets := fun.Elements(true, pkgName)
-			haveArgs := nil != args && len(args) > 0
-			haveRets := nil != rets && len(rets) > 0
-			if haveArgs || haveRets {
-				fmt.Printf(":")
-				if haveArgs {
-					fmt.Printf(" %s", strings.Join(args, " "))
-				}
-				if haveRets {
-					fmt.Printf(" -> %s", strings.Join(rets, " "))
-				}
-				fmt.Println("")
+			if nil != args && len(args) > 0 {
+				fmt.Printf(" %s", strings.Join(args, " "))
 			}
+			if nil != rets && len(rets) > 0 {
+				fmt.Printf(" -> %s", strings.Join(rets, " "))
+			}
+			fmt.Println("")
 		}
 	}
 }

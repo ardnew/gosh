@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"go/build"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/ardnew/gosh/cmd/goshfun/pkg"
@@ -22,8 +23,9 @@ const outputName = "fun"
 // pkgDefault defines which Go standard library packages to generate supporting
 // interfaces for if the -pkg flag is not provided.
 var pkgDefault = pkg.Pkg{
-	"strings",
+	"math",
 	"path/filepath",
+	"strings",
 }
 
 func main() {
@@ -57,15 +59,31 @@ func main() {
 	file := mkOutputFile(argOut, "main.go")
 	defer file.Close()
 
-	fmt.Printf("creating Go source file: %s\n", filepath.Join(argOut, "main.go"))
+	outputFilePath := filepath.Join(argOut, "main.go")
+	outputBinPath := filepath.Join(argOut, argOut)
 
 	// generate the parsers/formatters source, pretty printed
+	fmt.Printf("---\ncreating Go source file: %s\n", outputFilePath)
 	prt := print.NewPrinter(file, srcPath)
 	prt.PrintHeader(pkgs)
 	prt.PrintBody()
 	for path, pkg := range pkgs {
 		prt.PrintPackage(true, path, pkg)
 	}
+
+	fmt.Printf("---\nrunning goimports: %s\n", outputFilePath)
+	goimports := execCmd(argOut, "goimports", "-w", "main.go")
+	if len(goimports) > 0 {
+		fmt.Printf("%s\n", goimports)
+	}
+
+	fmt.Printf("---\nrunning go build: %s\n", outputFilePath)
+	gobuild := execCmd(argOut, "go", "build")
+	if len(gobuild) > 0 {
+		fmt.Printf("%s\n", gobuild)
+	}
+
+	fmt.Printf("---\ndone: executable created: %s\n", outputBinPath)
 }
 
 func outputPath() string { return filepath.Join(".", outputName) }
@@ -79,4 +97,14 @@ func mkOutputFile(dir, name string) *os.File {
 		panic(err)
 	}
 	return file
+}
+
+func execCmd(dir, cmd string, arg ...string) []byte {
+	c := exec.Command(cmd, arg...)
+	c.Dir = dir
+	o, err := c.CombinedOutput()
+	if nil != err {
+		panic(err)
+	}
+	return o
 }

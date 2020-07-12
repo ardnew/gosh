@@ -173,7 +173,10 @@ func (ret *Return) Formatter(rName, qName string, retPos, numRets int, format Fo
 	case "string":
 		fn.Add("return input")
 	case "error":
-		fn.Add("return input.Error()")
+		fn.Add("if nil != input {")
+		fn.Add("	return input.Error()")
+		fn.Add("}")
+		fn.Add("return \"\"")
 	case "bool":
 		fn.Add("return strconv.FormatBool(input)")
 	case "byte":
