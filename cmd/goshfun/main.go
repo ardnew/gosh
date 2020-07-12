@@ -14,7 +14,7 @@ import (
 	// "github.com/juju/errors"
 )
 
-const outputName = "goshfun"
+const outputName = "fun"
 
 // May be overridden using -pkg flags. Provide the -pkg flag multiple times to
 // specify multiple packages (e.g. "-pkg 'the/first' -pkg 'the/second' ...").
