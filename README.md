@@ -4,7 +4,7 @@
 
 The [`github.com/ardnew/gosh`](https://github.com/ardnew/gosh) repo contains two primary utilities (written in pure Go) designed to **improve the quality of my personal life**.
 
-[*Currently*](#future-work), these utilities, namely `gosh` and `goshfun` are intended for use as standlone executables.
+*Currently*, these utilities, namely `gosh` and `goshfun` are intended for use as standlone executables.
 
 ---
 
@@ -24,15 +24,15 @@ Also in `config.yml`, there are options for specifying which shell to launch (`/
 
 ### Quickstart
 
-You simply call `gosh [profile]` from your existing shell to start a new session (see [Usage](https://github.com/ardnew/gosh/README.md#usage) above for info about profiles).
+You simply call `gosh [profile]` from your existing shell to start a new session (see [Usage](https://github.com/ardnew/gosh/#Usage) above for info about profiles).
 
 > If you're ***hardcore*** like me, you can also replace your login shell (e.g., `/bin/bash` in `/etc/passwd`) with `/path/to/gosh` to let it always manage your shell.
 
-Just to get up and running, I recommend using the [demo included with this repo](https://github.com/ardnew/gosh/config). Installation is easy:
+Just to get up and running, I recommend using the [demo included with this repo](https://github.com/ardnew/gosh/tree/master/config/). Installation is easy:
 
 1. Install package: `go get -v github.com/ardnew/gosh/cmd/gosh`
 
-2. Copy the contents of [$GOPATH/src/github.com/ardnew/gosh/config/](https://github.com/ardnew/gosh/config) into `~/.config/gosh`.
+2. Copy the contents of [$GOPATH/src/github.com/ardnew/gosh/config/](https://github.com/ardnew/gosh/tree/master/config/) into `~/.config/gosh`.
 
 3. Execute `gosh`, and you should see a familiar shell, but what you don't see is that it is being managed by a Go application! 
 
