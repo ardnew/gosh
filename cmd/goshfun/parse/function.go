@@ -81,7 +81,7 @@ func (fun *Function) Parse(decl *ast.FuncDecl) *Function {
 func (fun *Function) ProtoGo(pkg string) string {
 
 	var sb strings.Builder
-	name, args, rets := fun.elements(false, pkg)
+	name, args, rets := fun.Elements(false, pkg)
 	sb.WriteString(fmt.Sprintf("func %s(%s)", name, strings.Join(args, ", ")))
 	if len(rets) > 0 {
 		r := strings.Join(rets, ", ")
@@ -98,7 +98,7 @@ func (fun *Function) ProtoGo(pkg string) string {
 func (fun *Function) ProtoSh(pkg string) string {
 
 	var sb strings.Builder
-	name, args, rets := fun.elements(true, pkg)
+	name, args, rets := fun.Elements(true, pkg)
 	sb.WriteString(name + ":")
 	if len(args) > 0 {
 		sb.WriteString(" " + strings.Join(args, " "))
@@ -156,7 +156,9 @@ func (fun *Function) MinArgs() int {
 	return min
 }
 
-func (fun *Function) elements(sh bool, pkg string) (name string, args, rets []string) {
+// Elements returns the primary components of a prototype formatted for either
+// the Go (sh == false) or the shell (sh == true) interface.
+func (fun *Function) Elements(sh bool, pkg string) (name string, args, rets []string) {
 
 	name = fun.FullName(pkg)
 
