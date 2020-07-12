@@ -26,6 +26,8 @@ Also in `config.yml`, there are options for specifying which shell to launch (`/
 
 You simply call `gosh [profile]` from your existing shell to start a new session (see [Usage](https://github.com/ardnew/gosh/README.md#usage) above for info about profiles).
 
+> If you're ***hardcore*** like me, you can also replace your login shell (e.g., `/bin/bash` in `/etc/passwd`) with `/path/to/gosh` to let it always manage your shell.
+
 Just to get up and running, I recommend using the [demo included with this repo](https://github.com/ardnew/gosh/config). Installation is easy:
 
 1. Copy the contents of [config](https://github.com/ardnew/gosh/config) into `~/.config/gosh`.
@@ -43,8 +45,30 @@ All available command-line arguments:
 |`-l`|`string`|output log handler (`null`, `standard`, `ascii`, `json`) (default `null`)|
 |`-o`|`bool`|do NOT inherit the environment from current process, i.e., orphan|
 
-> If you're ***hardcore*** like me, you can also replace your login shell (e.g., `/bin/bash` in `/etc/passwd`) with `/path/to/gosh` to let it always manage your shell.
+##### Configuration
 
+The following example configuration file demonstrates **a.**) how to specify which shell to invoke, **b.**) how to add flags to it (and how to refer to the dynamically-generated initialization script, **c.**) how to define a profile (and its directory name), and **d.**) how to define which files to include when loading a profile.
+
+```yaml
+---
+shell: /bin/bash                    #   (a.)
+args: [ --rcfile, __GOSH_INIT__ ]   #   (b.)
+env:
+  - auto:                           #   (c.)
+    - host.bash                     #   (d.)
+    - paths.bash                    #   (d.)
+    - terminal.bash                 #   ...
+    - colors.bash
+    - functions.bash
+    - aliases.bash
+    - prompt.bash
+    - completion.bash
+  - arduino:                        #   (c.)
+    - arduino-cli.bash              #   (d.)
+  - segger:                         #   (c.)
+    - segger-jlink.bash             #   (d.)
+
+```
 ---
 
 ## 2. [`goshfun`](https://github.com/ardnew/gosh/cmd/goshfun) 
