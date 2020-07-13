@@ -1,4 +1,14 @@
 #!/bin/bash
+# indicate our inclusion to all who follow
+__gosh_aliases="aliases.bash"
+__gosh_aliases_includes=$( basename "${__gosh_aliases}" ".bash" )".d"
+
+# source all files in the includes directory
+if [[ -d "${__gosh_aliases_includes}" ]]; then
+	for inc in "${__gosh_aliases_includes}"/*; do
+		. "${inc}"
+	done
+fi
 
 # ls
 alias     l="command ls"
@@ -36,12 +46,12 @@ alias find.dos="command grep -IUlr $'\r'"
 
 # tree
 if type -P tree &> /dev/null; then
-  alias    l.tree='command tree -i -f -D -A -C --dirsfirst'
-  alias   ll.tree='l.tree -p -u -g -s'
-  alias   la.tree='ll.tree -a'
-  alias   ld.tree='ll.tree -d'
-  alias du-s.tree='l.tree -s'
-  alias du-h.tree='l.tree -h'
+	alias    l.tree='command tree -i -f -D -A -C --dirsfirst'
+	alias   ll.tree='l.tree -p -u -g -s'
+	alias   la.tree='ll.tree -a'
+	alias   ld.tree='ll.tree -d'
+	alias du-s.tree='l.tree -s'
+	alias du-h.tree='l.tree -h'
 fi
 
 # utility

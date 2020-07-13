@@ -95,7 +95,7 @@ fqbn()
 	local config="--config-file $( arduino-cli-config-file )"
 
 	if [[ $# -eq 0 ]]
-	then 
+	then
 		{
 			echo "== **WARNING** ======================================"
 			echo " no arguments given, will match all supported boards "
@@ -304,7 +304,7 @@ ino()
 		cmd="upload"
 		upload=$port
 		portconfig="--port $port"
-		inputconfig="--input ${sketch}/${binname}"
+		inputconfig="--input-dir ${sketch}/"
 		[[ -n $verify ]] && verifyconfig="--verify"
 
 	elif [[ -n $port ]] && [[ -z $compile ]]

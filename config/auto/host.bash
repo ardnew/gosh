@@ -1,4 +1,14 @@
 #!/bin/bash
+# indicate our inclusion to all who follow
+__gosh_host="host.bash"
+__gosh_host_includes=$( basename "${__gosh_host}" ".bash" )".d"
+
+# source all files in the includes directory
+if [[ -d "${__gosh_host_includes}" ]]; then
+  for inc in "${__gosh_host_includes}"/*; do
+    . "${inc}"
+  done
+fi
 
 host_linux=1
 [[ "${OSTYPE}" = *linux* ]] &&
