@@ -4,11 +4,9 @@
 
 The [`github.com/ardnew/gosh`](https://github.com/ardnew/gosh) repo contains two primary utilities (written in pure Go) designed to **improve the quality of my personal life**.
 
-*Currently*, these utilities, namely `gosh` and `goshfun` are intended for use as standlone executables.
-
 ---
 
-## 1. [`gosh`](https://github.com/ardnew/gosh/tree/master/cmd/gosh) 
+## 1. [`gosh`](https://github.com/ardnew/gosh/tree/master/cmd/gosh) - Launch shell with YAML-driven environment
 
 ### Usage
 
@@ -73,7 +71,7 @@ env:
 ```
 ---
 
-## 2. [`goshfun`](https://github.com/ardnew/gosh/tree/master/cmd/goshfun) 
+## 2. [`goshfun`](https://github.com/ardnew/gosh/tree/master/cmd/goshfun) - Generate command-line interface for Go library functions
 
 The intent of `goshfun` is to automatically generate a command-line interface to much of the Go standard library. This means functions like `strings.Join`, `path/filepath.Split`, `math.Min`/`math.Max`, and a vast number of other really useful utilities, some of which not directly available in most modern shells, can be used directly from the command-line, using shell syntax, without having to write and compile any Go code whatsoever.
 
