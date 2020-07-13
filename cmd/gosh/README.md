@@ -23,7 +23,7 @@ Just to get up and running, I recommend using the [demo included with this repo]
 
 1. Install package: `go get -v github.com/ardnew/gosh/cmd/gosh`
 
-2. Copy the contents of [$GOPATH/src/github.com/ardnew/gosh/config/](https://github.com/ardnew/gosh/tree/master/config/) into `~/.config/gosh`.
+2. Copy the contents of [`$GOPATH/src/github.com/ardnew/gosh/config/`](https://github.com/ardnew/gosh/tree/master/config/) into `~/.config/gosh`.
 
 3. Execute `gosh`, and you should see a familiar shell, but what you don't see is that it is being managed by a Go application! 
 
