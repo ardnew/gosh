@@ -4,6 +4,8 @@
 
 The [`github.com/ardnew/gosh`](https://github.com/ardnew/gosh) repo contains two primary utilities (written in pure Go) designed to **improve the quality of my personal life**.
 
+See the respective `README.md` of each utility linked below for more information.
+
 ## [`cmd/gosh`](https://github.com/ardnew/gosh/tree/master/cmd/gosh) - Launch shell with YAML-driven environment
 
 The `gosh` application dynamically creates an initialization file (e.g., `~/.bashrc`, `~/.zshrc`, etc.) for your shell by including the contents of various traditional shell scripts (e.g., `~/.bash_functions`, `~/.bash_aliases`, etc.) located in a configuration directory and grouped together by named "profile" keys in a YAML configuration file. 
