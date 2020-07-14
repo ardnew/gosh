@@ -54,5 +54,10 @@ if type -P tree &> /dev/null; then
 	alias du-h.tree='l.tree -h'
 fi
 
+# BeyondCompare
+if type -p bcompare &> /dev/null; then
+  alias bdiff='bcompare'
+fi
+
 # utility
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'

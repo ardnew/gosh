@@ -78,8 +78,9 @@ func (p *Pkg) withPrefix(prefix ...string) []string {
 
 // Parse constructs a list of Package located in a common GOROOT source parent
 // directory, parsing (via AST construction) lists of exported function
-// signatures/definitions associated with each said Package, and returns a list
-// of each populated with all exported function signatures discovered.
+// signatures/definitions associated with each said Package, and returns a map
+// of each package path to the Package populated with all exported function
+// signatures discovered.
 func (p *Pkg) Parse(prefix ...string) (map[string]*parse.Package, error) {
 
 	// we currently only support types with primitive bases (slices, ellipses, or
