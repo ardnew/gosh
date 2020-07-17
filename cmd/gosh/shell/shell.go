@@ -38,11 +38,16 @@ func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (
 	exp := config.NewArgExpansion(initFile.Name())
 	arg := exp.ExpandArgs(unique(append([]string{c.Shell}, c.Args...)...)...)
 
+	wd, wdErr := os.Getwd()
+	if nil != wdErr {
+		wd = p.App.HomeDir()
+	}
+
 	l.Context().
 		WithField("shell", c.Shell).
 		WithField("args", fmt.Sprintf("[%s]", strings.Join(arg, ", "))).
 		WithField("env", fmt.Sprintf("[%s]", strings.Join(env, ", "))).
-		WithField("dir", p.App.HomeDir()).
+		WithField("dir", wd).
 		WithField("stdin", os.Stdin.Name()).
 		WithField("stdout", os.Stdout.Name()).
 		WithField("stderr", os.Stderr.Name()).
@@ -52,7 +57,7 @@ func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (
 		Path:   c.Shell,
 		Args:   arg,
 		Env:    env,
-		Dir:    p.App.HomeDir(),
+		Dir:    wd,
 		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,

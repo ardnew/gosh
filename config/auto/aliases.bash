@@ -1,14 +1,4 @@
 #!/bin/bash
-# indicate our inclusion to all who follow
-__gosh_aliases="aliases.bash"
-__gosh_aliases_includes=$( basename "${__gosh_aliases}" ".bash" )".d"
-
-# source all files in the includes directory
-if [[ -d "${__gosh_aliases_includes}" ]]; then
-	for inc in "${__gosh_aliases_includes}"/*; do
-		. "${inc}"
-	done
-fi
 
 # ls
 alias     l="command ls"
@@ -56,7 +46,7 @@ fi
 
 # BeyondCompare
 if type -p bcompare &> /dev/null; then
-  alias bdiff='bcompare'
+	alias bdiff='bcompare'
 fi
 
 # utility

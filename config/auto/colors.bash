@@ -1,14 +1,4 @@
 #!/bin/bash
-# indicate our inclusion to all who follow
-__gosh_colors="colors.bash"
-__gosh_colors_includes=$( basename "${__gosh_colors}" ".bash" )".d"
-
-# source all files in the includes directory
-if [[ -d "${__gosh_colors_includes}" ]]; then
-	for inc in "${__gosh_colors_includes}"/*; do
-		. "${inc}"
-	done
-fi
 
 uncolorseq() {
 	echo "${@}" | sed -r 's/\\\[\\e\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]\\\]//g'

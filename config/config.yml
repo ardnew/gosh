@@ -4,11 +4,16 @@ args: [ --rcfile, __GOSH_INIT__ ]
 env:
   - auto:
     - host.bash
+    - go/paths.bash
+    - rust/paths.bash
     - paths.bash
     - colors.bash
     - functions.bash
     - aliases.bash
+    - git/prompt.bash
     - prompt.bash
+    - git/completion.bash
+    - go/completion.bash
     - completion.bash
     - terminal.bash
   - arduino:

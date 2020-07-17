@@ -1,14 +1,4 @@
 #!/bin/bash
-# indicate our inclusion to all who follow
-__gosh_functions="functions.bash"
-__gosh_functions_includes=$( basename "${__gosh_functions}" ".bash" )".d"
-
-# source all files in the includes directory
-if [[ -d "${__gosh_functions_includes}" ]]; then
-	for inc in "${__gosh_functions_includes}"/*; do
-		. "${inc}"
-	done
-fi
 
 escape() {
 	# escape bash metachars

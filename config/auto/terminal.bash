@@ -1,14 +1,4 @@
 #!/bin/bash
-# indicate our inclusion to all who follow
-__gosh_terminal="terminal.bash"
-__gosh_terminal_includes=$( basename "${__gosh_terminal}" ".bash" )".d"
-
-# source all files in the includes directory
-if [[ -d "${__gosh_terminal_includes}" ]]; then
-  for inc in "${__gosh_terminal_includes}"/*; do
-    . "${inc}"
-  done
-fi
 
 export HISTCONTROL=$HISTCONTROL${HISTCONTROL+,}ignoredups
 export HISTSIZE=4096
