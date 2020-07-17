@@ -12,18 +12,22 @@ import (
 type Parameters struct {
 	App           AppProperties
 	ConfigPath    string
+	ShellCommand  string
 	LogHandler    string
 	DebugEnabled  bool
 	OrphanEnviron bool
-	SelEnvName    []string
+	Profiles      Profile
+	ShellArgs     []string
 }
 
 // StartFlags contains attributes of the pre-defined command-line flags.
 type StartFlags struct {
 	ConfigPath    StringFlag
+	ShellCommand  StringFlag
+	Profiles      ProfileFlag
+	OrphanEnviron BoolFlag
 	LogHandler    StringFlag
 	DebugEnabled  BoolFlag
-	OrphanEnviron BoolFlag
 }
 
 // StringFlag contains the attributes of a string type command-line flag.
@@ -40,21 +44,28 @@ type BoolFlag struct {
 	Preset bool
 }
 
+// ProfileFlag contains the attributes of a Profile type command-line flag.
+type ProfileFlag struct {
+	Flag string
+	Desc string
+}
+
 // Parse initializes the default flagset and parses command-line flags into the
 // shareable Parameters struct.
 func (sf *StartFlags) Parse(app *AppProperties) *Parameters {
+
 	param := Parameters{App: *app}
+
 	flag.StringVar(&param.ConfigPath, sf.ConfigPath.Flag, sf.ConfigPath.Preset, sf.ConfigPath.Desc)
+	flag.StringVar(&param.ShellCommand, sf.ShellCommand.Flag, sf.ShellCommand.Preset, sf.ShellCommand.Desc)
+	flag.Var(&param.Profiles, sf.Profiles.Flag, sf.Profiles.Desc)
 	flag.StringVar(&param.LogHandler, sf.LogHandler.Flag, sf.LogHandler.Preset, sf.LogHandler.Desc)
 	flag.BoolVar(&param.DebugEnabled, sf.DebugEnabled.Flag, sf.DebugEnabled.Preset, sf.DebugEnabled.Desc)
 	flag.BoolVar(&param.OrphanEnviron, sf.OrphanEnviron.Flag, sf.OrphanEnviron.Preset, sf.OrphanEnviron.Desc)
 	flag.Parse()
 
-	// positional arguments are names of environments to load
-	param.SelEnvName = []string{}
-	for _, a := range flag.Args() {
-		param.SelEnvName = append(param.SelEnvName, a)
-	}
+	param.ShellArgs = make([]string, 0, len(flag.Args()))
+	param.ShellArgs = append(param.ShellArgs, flag.Args()...)
 
 	return &param
 }

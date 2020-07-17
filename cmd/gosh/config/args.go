@@ -9,15 +9,16 @@ import (
 // args elements defined in the YAML configuration file.
 type ArgExpansion struct {
 	matcher *regexp.Regexp
-	rule    map[string]string
+	rule    map[string]interface{}
 }
 
 // NewArgExpansion constructs a new expansion ruleset with given expansion
 // values and compiles the internal key matcher.
-func NewArgExpansion(initFile string) *ArgExpansion {
+func NewArgExpansion(initFile string, shellArgs ...string) *ArgExpansion {
 	ae := ArgExpansion{
-		rule: map[string]string{
+		rule: map[string]interface{}{
 			`__GOSH_INIT__`: initFile,
+			`__GOSH_ARGS__`: shellArgs,
 		},
 	}
 	ae.matcher = ae.Compile()
@@ -37,7 +38,7 @@ func (ae *ArgExpansion) Compile() *regexp.Regexp {
 // Expand performs a single-pass literal string substitution according to the
 // rule map. If the given arg matches exactly a rule key, then the rule value is
 // returned, otherwise the original arg is returned.
-func (ae *ArgExpansion) Expand(arg string) string {
+func (ae *ArgExpansion) Expand(arg string) interface{} {
 	// test if arg matches the RE before stepping through and comparing strings to
 	// determine which one to expand.
 	if ae.matcher.MatchString(arg) {
@@ -46,14 +47,21 @@ func (ae *ArgExpansion) Expand(arg string) string {
 				return replace
 			}
 		}
+		return nil // don't return expansion variables, just remove them
 	}
 	return arg
 }
 
 // ExpandArgs calls Expand on each element in args.
 func (ae *ArgExpansion) ExpandArgs(args ...string) []string {
-	for i, arg := range args {
-		args[i] = ae.Expand(arg)
+	exp := []string{}
+	for _, arg := range args {
+		switch t := ae.Expand(arg).(type) {
+		case string:
+			exp = append(exp, t)
+		case []string:
+			exp = append(exp, t...)
+		}
 	}
-	return args
+	return exp
 }

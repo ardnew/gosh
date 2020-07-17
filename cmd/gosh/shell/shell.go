@@ -35,8 +35,12 @@ func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (
 		env = os.Environ()
 	}
 
-	exp := config.NewArgExpansion(initFile.Name())
+	exp := config.NewArgExpansion(initFile.Name(), p.ShellArgs...)
 	arg := exp.ExpandArgs(unique(append([]string{c.Shell}, c.Args...)...)...)
+
+	if "" != p.ShellCommand {
+		arg = append(arg, c.CmdFlag, p.ShellCommand)
+	}
 
 	wd, wdErr := os.Getwd()
 	if nil != wdErr {
@@ -80,7 +84,7 @@ func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *E
 	var pos int64
 
 	seen := map[string]int{}
-	for i, sel := range append([]string{p.App.ReqEnvName}, p.SelEnvName...) {
+	for i, sel := range append([]string{p.App.ReqEnvName}, p.Profiles...) {
 
 		if _, ok := seen[sel]; ok {
 			continue

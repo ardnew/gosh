@@ -10,8 +10,22 @@ import (
 
 	"github.com/ardnew/gosh/cmd/goshfun/pkg"
 	"github.com/ardnew/gosh/cmd/goshfun/run"
-	// "github.com/juju/errors"
+
+	"github.com/ardnew/version"
 )
+
+func init() {
+	version.ChangeLog = []version.Change{
+		{ // initializing project version number in ONE location is fine I guess
+			Package: "goshfun",
+			Version: "0.1.0",
+			Date:    "July 7, 2020",
+			Description: []string{
+				`initial commit`,
+			},
+		},
+	}
+}
 
 const outputName = "gof"
 

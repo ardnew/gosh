@@ -37,7 +37,7 @@ func Start(param *config.Parameters) (ui *CLI, err error) {
 
 	defer ui.Log.Context().
 		WithField("configPath", param.ConfigPath).
-		WithField("env", param.SelEnvName).
+		WithField("env", param.Profiles).
 		Trace("initialization").
 		Stop(&err)
 
@@ -91,7 +91,7 @@ func (ui *CLI) CreateShell() (err error) {
 		var selected string
 		if selected, startShell = ui.readRestartFile(); startShell {
 			// scan its contents into the selected-environments parameters
-			ui.Param.SelEnvName = ui.splitDataRestartFile(selected)
+			ui.Param.Profiles = ui.splitDataRestartFile(selected)
 		}
 	}
 	return

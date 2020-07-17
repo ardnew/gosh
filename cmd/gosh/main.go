@@ -23,6 +23,14 @@ func init() {
 				`initial commit`,
 			},
 		},
+		{
+			Package: "gosh",
+			Version: "0.2.0",
+			Date:    "July 17, 2020",
+			Description: []string{
+				`move profile selection to flags, args represent command to run`,
+			},
+		},
 	}
 }
 
@@ -39,9 +47,25 @@ func main() {
 
 	appFlag := config.StartFlags{
 		ConfigPath: config.StringFlag{
-			Flag:   "c",
-			Desc:   fmt.Sprintf("path to the primary configuration file"),
+			Flag:   "f",
+			Desc:   "path to the primary configuration file",
 			Preset: appProp.ConfigPath(),
+		},
+		ShellCommand: config.StringFlag{
+			Flag:   "c",
+			Desc:   "run given command instead of starting new shell",
+			Preset: "",
+		},
+		Profiles: config.ProfileFlag{
+			Flag: "p",
+			Desc: "load profile with given name (must be defined in configuration file; specify multiple times for multiple profiles)",
+		},
+		// reversed logic for inherit because I suspect inheriting is the preferred
+		// or typical behavior. thus, user adds the flag for atypical behavior.
+		OrphanEnviron: config.BoolFlag{
+			Flag:   "o",
+			Desc:   "do NOT inherit the environment from current process, i.e., orphan",
+			Preset: false,
 		},
 		LogHandler: config.StringFlag{
 			Flag:   "l",
@@ -51,13 +75,6 @@ func main() {
 		DebugEnabled: config.BoolFlag{
 			Flag:   "g",
 			Desc:   "enable debug message logging",
-			Preset: false,
-		},
-		// reversed logic for inherit because I suspect inheriting is the preferred
-		// or typical behavior. thus, user adds the flag for atypical behavior.
-		OrphanEnviron: config.BoolFlag{
-			Flag:   "o",
-			Desc:   "do NOT inherit the environment from current process, i.e., orphan",
 			Preset: false,
 		},
 	}

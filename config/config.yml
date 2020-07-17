@@ -1,6 +1,7 @@
 ---
 shell: /bin/bash
-args: [ --rcfile, __GOSH_INIT__ ]
+args: [ --rcfile, __GOSH_INIT__, __GOSH_ARGS__ ]
+cmdflag: -c
 env:
   - auto:
     - host.bash
@@ -14,6 +15,7 @@ env:
     - prompt.bash
     - git/completion.bash
     - go/completion.bash
+    - rust/completion.bash
     - completion.bash
     - terminal.bash
   - arduino:

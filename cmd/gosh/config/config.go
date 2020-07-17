@@ -11,9 +11,10 @@ import (
 
 // Config represents the parameters to launch and configure the user shell.
 type Config struct {
-	Shell string  `yaml:"shell"`
-	Args  ArgList `yaml:"args"`
-	Env   EnvList `yaml:"env"`
+	Shell   string  `yaml:"shell"`
+	Args    ArgList `yaml:"args"`
+	CmdFlag string  `yaml:"cmdflag"`
+	Env     EnvList `yaml:"env"`
 }
 
 // SourceList contains names of files to be sourced by the shell environment.
