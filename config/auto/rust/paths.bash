@@ -15,9 +15,12 @@ case "${host_kind}" in
 		;;
 esac
 
-RUSTUP_HOME="${path_rustup}"
-CARGO_HOME="${path_cargo}"
-PATH="${CARGO_HOME}/bin:${PATH}"
+[[ -d "${path_rustup}" ]] && RUSTUP_HOME="${path_rustup}"
+
+if [[ -d "${path_cargo}" ]]; then
+	CARGO_HOME="${path_cargo}"
+	PATH="${CARGO_HOME}/bin:${PATH}"
+fi
 
 # add the rustup manpages to our system MANPATH
 if [[ -d "${path_rustup}" ]]; then
@@ -29,7 +32,6 @@ if [[ -d "${path_rustup}" ]]; then
 	fi
 fi
 
-[[ -n ${rust_man} ]] && \
-	MANPATH="${rust_man}:${MANPATH}"
+[[ -n ${rust_man} ]] && MANPATH="${rust_man}:${MANPATH}"
 
 export RUSTUP_HOME CARGO_HOME PATH MANPATH

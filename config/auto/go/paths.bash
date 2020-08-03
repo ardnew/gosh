@@ -15,10 +15,11 @@ case "${host_kind}" in
 		;;
 esac
 
-GOPATH="${path_go}"
-PATH="${GOPATH}/bin:${PATH}"
+if [[ -d "${path_go}" ]]; then
+	GOPATH="${path_go}"
+	PATH="${GOPATH}/bin:${PATH}"
+fi
 
-[[ -d "${path_goshfun}" ]] && \
-	PATH="${path_goshfun}:${PATH}"
+[[ -d "${path_goshfun}" ]] && PATH="${path_goshfun}:${PATH}"
 
 export GOPATH PATH

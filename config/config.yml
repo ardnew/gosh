@@ -5,18 +5,22 @@ cmdflag: -c
 env:
   - auto:
     - host.bash
+    - trip/host.bash
+    - paths.bash
     - go/paths.bash
     - rust/paths.bash
-    - paths.bash
+    - openocd/paths.bash
+    - hub/paths.bash
     - colors.bash
     - functions.bash
     - aliases.bash
-    - git/prompt.bash
+    - hub/aliases.bash
     - prompt.bash
+    - git/prompt.bash
+    - completion.bash
     - git/completion.bash
     - go/completion.bash
     - rust/completion.bash
-    - completion.bash
     - terminal.bash
   - arduino:
     - arduino-cli.bash
