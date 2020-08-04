@@ -13,6 +13,8 @@ env:
     - hub/paths.bash
     - colors.bash
     - functions.bash
+    - openocd/functions.bash
+    - hub/functions.bash
     - aliases.bash
     - hub/aliases.bash
     - prompt.bash

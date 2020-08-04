@@ -3,6 +3,13 @@
 __name__="ino"
 __version__="0.1.0"
 
+ansi-strip() 
+{   # (e.g.) remove color codes embedded in strings
+	printf -- "%s" "${@}" | \
+		command sed -e 's/\x1b[[0-9;]*m//g' \
+					-e 's/\x1b\[K//g'
+}
+
 arduino-prefix()
 {
 	echo "/usr/local"
@@ -57,7 +64,7 @@ arduino-env-filename()
 
 arduino-env-file()
 {
-	local sketch=$1
+	local sketch=$( ansi-strip "${1}" )
 	local filename=$( arduino-env-filename )
 	[[ -d "$sketch" ]] && echo "${sketch}/${filename}"
 }
@@ -67,7 +74,7 @@ arduino-env-load()
 	unset -v ARDUINO_FQBN ARDUINO_PORT
 
 	local sketch=$PWD
-	[[ $# -gt 0 ]] && sketch=$1
+	[[ $# -gt 0 ]] && sketch=$( ansi-strip "${1}" )
 
 	local envfile=$( arduino-env-file "$sketch" )
 	if [[ -f "$envfile" ]]
@@ -171,17 +178,17 @@ ino()
 		(-h)	ino-help; return 1 ;;
 		(-a)	cmd="board"; arg="listall" ;;
 		(-l)	cmd="board"; arg="list" ;;
-		(-b)	shift; fqbn=$1 ;;
-		(-p)	shift; port=$1 ;;
+		(-b)	shift; fqbn=$( ansi-strip "${1}" ) ;;
+		(-p)	shift; port=$( ansi-strip "${1}" ) ;;
 		(-u)	upload=1 ;;
 		(-t)	verify=1 ;;
 		(-c)    compile=1 ;;
-		(-s)	shift; sketch=$1 ;;
-		(-v)	shift; verbose=$1 ;;
+		(-s)	shift; sketch=$( ansi-strip "${1}" ) ;;
+		(-v)	shift; verbose=$( ansi-strip "${1}" ) ;;
 		(-w)	writeconf=1 ;;
 		(-x)	autoconf=1 ;;
 		(cli)	shift; cli=1; break ;;
-		(*)	args=( "${args[@]}" "$1" ) ;;
+		(*)		s=$( ansi-strip "${1}" ); args=( "${args[@]}" "$s" ) ;;
 		esac
 		shift
 	done
@@ -260,8 +267,8 @@ ino()
 		fqbn=$ARDUINO_FQBN
 	fi
 
-	mapfile -t matches < <( fqbn 2>/dev/null | grep "$fqbn" )
-	mapfile -t exactmatches < <( fqbn 2>/dev/null | grep "^${fqbn}$" )
+	mapfile -t matches < <( fqbn 2>/dev/null | command grep --color=none "$fqbn" )
+	mapfile -t exactmatches < <( fqbn 2>/dev/null | command grep --color=none "^${fqbn}$" )
 	if [[ ${#matches[@]} -eq 0 ]]
 	then
 		echo "unsupported board name: $fqbn"
@@ -276,7 +283,7 @@ ino()
 			return 6
 		fi
 	else
-		fqbn=${matches[0]}
+		fqbn=$( ansi-strip "${matches[0]}" )
 	fi
 
 	if [[ -z $port ]]

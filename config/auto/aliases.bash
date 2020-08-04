@@ -22,6 +22,13 @@ alias o2h="perl -e 'printf qq|%X$/|, oct(shift)'"
 alias o2d="perl -e 'printf qq|%d$/|, oct(shift)'"
 alias o2b="perl -e 'printf qq|%b$/|, oct(shift)'"
 
+# xxd
+alias bytes='xxd -c1'
+alias  bits='xxd -c1 -b'
+
+# cgdb
+alias cgdb='command cgdb -d gdb-multiarch -- -q'
+
 # subversion
 alias  sci='svn commit'
 alias  srm='svn rm'
