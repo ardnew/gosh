@@ -1,7 +1,7 @@
 #!/bin/bash
 
 __name__="ino"
-__version__="0.1.0"
+__version__="0.2.0"
 
 ansi-strip() 
 {   # (e.g.) remove color codes embedded in strings
