@@ -1,0 +1,142 @@
+# https://taskfile.dev
+
+version: '2'
+
+vars:
+  OUTPUT_DIR: "../../dist"
+  OUTPUT_BIN: "gosh"
+  VERSION_ID: "gosh0.2.0"
+  SOURCE_DIR: "."
+  SOURCE_EXT: ".{go}" # filename extension of source files (uses shell expansion)
+
+tasks:
+
+  default:
+    deps: [ clean, release ]
+
+  clean:
+    silent: true
+    cmds:
+      - find '{{.OUTPUT_DIR}}' \( \( -type f -name '{{.VERSION_ID}}*' \) -or \( -type d -name '{{.OUTPUT_BIN}}' \) \) -exec rm -rf {} \+
+
+  release:
+    deps:
+      - linux-386
+      - linux-amd64
+      - linux-arm
+      - linux-arm64
+      - freebsd-386
+      - freebsd-amd64
+      - freebsd-arm
+      - darwin-amd64
+      - windows-386
+      - windows-amd64
+
+  release-target:
+    vars:
+      BUNDLE_DIR: '{{printf "%s/%s-%s" .OUTPUT_DIR .OS .ARCH | fromSlash}}'
+      TARGET_DIR: '{{printf "%s/%s" .BUNDLE_DIR .OUTPUT_BIN | fromSlash}}'
+      SOURCE_DIR: '{{fromSlash .SOURCE_DIR}}'
+    cmds:
+      - task: assert-paths
+        vars:
+          TARGET_DIR: '{{.TARGET_DIR}}'
+          SOURCE_DIR: '{{.SOURCE_DIR}}'
+      - task: start-build
+        vars:
+          BUNDLE_DIR: '{{.BUNDLE_DIR}}'
+          TARGET_DIR: '{{.TARGET_DIR}}'
+          SOURCE_DIR: '{{.SOURCE_DIR}}'
+          OS: '{{.OS}}'
+          ARCH: '{{.ARCH}}'
+
+  assert-paths:
+    preconditions:
+      - sh: test -d '{{.TARGET_DIR}}' || mkdir -p '{{.TARGET_DIR}}'
+        msg: 'could not create output directory: {{.TARGET_DIR}}'
+      - sh: test -d '{{.SOURCE_DIR}}'
+        msg: 'source directory does not exist: {{.SOURCE_DIR}}'
+
+  start-build:
+    vars:
+      BUNDLE_ABS:
+        sh: readlink -f '{{.BUNDLE_DIR}}'
+      TARGET_ABS:
+        sh: readlink -f '{{.TARGET_DIR}}'
+      SOURCE_ABS:
+        sh: readlink -f '{{.SOURCE_DIR}}'
+    cmds:
+      - task: build-package
+        vars:
+          BUNDLE_ABS: '{{fromSlash .BUNDLE_ABS}}'
+          TARGET_ABS: '{{fromSlash .TARGET_ABS}}'
+          SOURCE_ABS: '{{fromSlash .SOURCE_ABS}}'
+          OS: '{{.OS}}'
+          ARCH: '{{.ARCH}}'
+
+  build-package:
+    vars:
+      BINARY_ABS: '{{printf "%s/%s" .TARGET_ABS .OUTPUT_BIN | fromSlash}}{{exeExt}}'
+    cmds:
+      - task: build
+        vars:
+          TARGET_ABS: '{{.TARGET_ABS}}'
+          BINARY_ABS: '{{.BINARY_ABS}}'
+          SOURCE_ABS: '{{.SOURCE_ABS}}'
+          OS: '{{.OS}}'
+          ARCH: '{{.ARCH}}'
+      - task: package
+        vars:
+          BUNDLE_ABS: '{{.BUNDLE_ABS}}'
+          OS: '{{.OS}}'
+          ARCH: '{{.ARCH}}'
+
+  build:
+    silent: true
+    dir: '{{.SOURCE_ABS}}'
+    preconditions:
+      - sh: '[[ -f "README.md" ]] && [[ -f "LICENSE" ]] && [[ -d "../../config" ]]'
+    method: checksum
+    sources:
+      - '{{printf "**/*%s" .SOURCE_EXT | fromSlash}}'
+      - 'README.md'
+      - 'LICENSE'
+      - '../../config'
+    generates:  [ "{{.BINARY_ABS}}" ]
+    env:
+      GOOS: '{{.OS}}'
+      GOARCH: '{{.ARCH}}'
+    cmds:
+      - go build -o '{{.BINARY_ABS}}'
+      - cp -r 'README.md' 'LICENSE' '../../config' '{{.TARGET_ABS}}'
+
+  package:
+    silent: true
+    dir: '{{.BUNDLE_ABS}}'
+    cmds:
+      - tar -czvf '{{.VERSION_ID}}.{{.OS}}-{{.ARCH}}.tar.gz' '{{.OUTPUT_BIN}}' &>/dev/null
+      - zip -r '{{.VERSION_ID}}.{{.OS}}-{{.ARCH}}.zip' '{{.OUTPUT_BIN}}' &>/dev/null
+      - echo "created packages:"
+      - echo "    {{.VERSION_ID}}.{{.OS}}-{{.ARCH}}.tar.gz"
+      - echo "    {{.VERSION_ID}}.{{.OS}}-{{.ARCH}}.zip"
+
+  linux-386:
+    deps: [ { task: release-target, vars: { OS: "linux", ARCH: "386" } } ]
+  linux-amd64:
+    deps: [ { task: release-target, vars: { OS: "linux", ARCH: "amd64" } } ]
+  linux-arm:
+    deps: [ { task: release-target, vars: { OS: "linux", ARCH: "arm" } } ]
+  linux-arm64:
+    deps: [ { task: release-target, vars: { OS: "linux", ARCH: "arm64" } } ]
+  freebsd-386:
+    deps: [ { task: release-target, vars: { OS: "freebsd", ARCH: "386" } } ]
+  freebsd-amd64:
+    deps: [ { task: release-target, vars: { OS: "freebsd", ARCH: "amd64" } } ]
+  freebsd-arm:
+    deps: [ { task: release-target, vars: { OS: "freebsd", ARCH: "arm" } } ]
+  darwin-amd64:
+    deps: [ { task: release-target, vars: { OS: "darwin", ARCH: "amd64" } } ]
+  windows-386:
+    deps: [ { task: release-target, vars: { OS: "windows", ARCH: "386" } } ]
+  windows-amd64:
+    deps: [ { task: release-target, vars: { OS: "windows", ARCH: "amd64" } } ]
