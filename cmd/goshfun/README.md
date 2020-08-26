@@ -11,7 +11,7 @@ Running `goshfun` without any arguments will generate shell interfaces for the d
 
 2. Generate Go source code and build for default packages: `goshfun` (by default this will generate an executable in the current directory named `gof`, and symlinks in `./gosh` each pointing to `../gof`)
 
-At this point you now have a shell interface for all of the functions it printed during generation. You can review those functions by just running `fun` without any arguments (or run `fun -h`).
+At this point you now have a shell interface for all of the functions it printed during generation. You can review those functions by just running `fun` without any arguments (or run `fun -h`, or list the directory contents in the directory `./gosh` containing the symlinks).
 
 ## Usage
 
