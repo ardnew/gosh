@@ -24,7 +24,7 @@ type EnvSource map[string][]byte
 // the shell exits or an error was encountered.
 func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (shellErr error, cmdErr error) {
 
-	initFile, err := writeEnvToFile(p, l, c, e)
+	initFile, profiles, err := writeEnvToFile(p, l, c, e)
 	if err != nil {
 		return errors.Trace(err), nil
 	}
@@ -33,6 +33,28 @@ func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (
 	var env []string
 	if !p.OrphanEnviron {
 		env = os.Environ()
+	}
+
+	const proKey = "GOSH_PROFILE"
+	proVal := strings.Join(profiles, ",")
+
+	hasPro := false
+	for i, e := range env {
+		v := strings.SplitN(e, "=", 2)
+		if len(v) > 0 {
+			if v[0] == proKey {
+				if len(v) > 1 {
+					// keep the profiles that were already set previously
+					proVal = fmt.Sprintf("%s(%s)", proVal, v[1])
+				}
+				env[i] = fmt.Sprintf("%s=%s", proKey, proVal)
+				hasPro = true
+			}
+		}
+	}
+
+	if !hasPro {
+		env = append(env, fmt.Sprintf("%s=%s", proKey, proVal))
 	}
 
 	exp := config.NewArgExpansion(initFile.Name(), p.ShellArgs...)
@@ -70,14 +92,14 @@ func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (
 	return nil, errors.Trace(shell.Cmd.Run())
 }
 
-func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (*os.File, error) {
+func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (*os.File, []string, error) {
 
 	var env *os.File
 	var err error
 
 	env, err = tempFile(p.App.PackageName + "-")
 	if err != nil {
-		return nil, errors.Trace(err)
+		return nil, nil, errors.Trace(err)
 	}
 
 	var cnt int
@@ -95,7 +117,7 @@ func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *E
 			pos += int64(cnt)
 			cnt, err = env.WriteAt(bytes, pos)
 			if err != nil {
-				return nil, errors.Trace(err)
+				return nil, nil, errors.Trace(err)
 			}
 
 			l.Context().
@@ -106,11 +128,18 @@ func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *E
 		}
 	}
 
-	if err = env.Close(); err != nil {
-		return nil, errors.Trace(err)
+	sel := make([]string, len(seen))
+	i := 0
+	for s := range seen {
+		sel[i] = s
+		i++
 	}
 
-	return env, nil
+	if err = env.Close(); err != nil {
+		return nil, nil, errors.Trace(err)
+	}
+
+	return env, sel, nil
 }
 
 func tempFile(prefix string) (*os.File, error) {

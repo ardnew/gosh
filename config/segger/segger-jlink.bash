@@ -222,6 +222,7 @@ my @MCU =
     [ "ATSAMD51J20", qw| PyPortal | ],
     [ "ATSAMD51G19", qw| ItsyBitsy M4 Express | ],
     [ "ATSAMD21E18", qw| Trinket M0 | ],
+    [ "STM32F405RG", qw| Feather STM32F405 Express | ],
   );
 
 sub combine { $_ = lc join "", @_; s/[\s\-_]*//g; quotemeta $_ }

@@ -41,6 +41,9 @@ alias apt-search='apt-cache search --names-only'
 # file utils
 alias find.dos="command grep -IUlr $'\r'"
 
+# locate
+alias locate-re="locate --regex"
+
 # tree
 if type -P tree &> /dev/null; then
 	alias    l.tree='command tree -i -f -D -A -C --dirsfirst'

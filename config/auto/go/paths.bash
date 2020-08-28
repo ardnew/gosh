@@ -1,7 +1,15 @@
 #!/bin/bash
 
+case "${target_triple}" in
+	x86_64-unknown-linux-gnu)
+		os_go="linux"
+		arch_go="amd64"
+		;;
+esac
+
 case "${host_kind}" in
 	$host_linux)
+		root_go="/usr/local/src/go/dev"
 		path_go="${HOME}/Code/go"
 		path_goshfun="${HOME}/.local/bin/gosh"
 		;;
@@ -15,11 +23,20 @@ case "${host_kind}" in
 		;;
 esac
 
+if [[ -d "${root_go}" ]]; then
+	GOROOT="${root_go}"
+	PATH="${GOROOT}/bin:${PATH}"
+fi
+
 if [[ -d "${path_go}" ]]; then
 	GOPATH="${path_go}"
 	PATH="${GOPATH}/bin:${PATH}"
 fi
 
+[[ -n ${os_go}   ]] && GOOS="${os_go}"
+[[ -n ${arch_go} ]] && GOARCH="${arch_go}"
+
 [[ -d "${path_goshfun}" ]] && PATH="${path_goshfun}:${PATH}"
 
-export GOPATH PATH
+export GOROOT GOPATH PATH GOOS GOARCH
+
