@@ -28,7 +28,9 @@ __prompt_command() {
 
 	local prompt_sym_color='\[\e[0;38;5;195m\]'
 	[[ ${exit_code} -ne 0 ]] && prompt_sym_color='\[\e[0;38;5;196m\]'
-	local prompt_sym=' ⧉ '
+	local prompt_sym=' ⧨ '
+	#local prompt_sym=' ⪢ '
+	#local prompt_sym=' ⧉ '
 	local prompt="${prompt_sym_color}${prompt_sym}"
 
 	local end='\[\e0'"\[$(tput sgr0)\] "

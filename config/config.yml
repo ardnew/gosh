@@ -5,29 +5,37 @@ cmdflag: -c
 env:
   - auto:
     - host.bash
-    - trip/host.bash
     - paths.bash
     - git/paths.bash
     - go/paths.bash
+    - perl/paths.bash
     - rust/paths.bash
     - java/paths.bash
     - openocd/paths.bash
     - hub/paths.bash
+    - hugo/paths.bash
+    - duc/paths.bash
     - colors.bash
     - functions.bash
     - openocd/functions.bash
     - hub/functions.bash
+    - duc/functions.bash
     - aliases.bash
     - hub/aliases.bash
     - prompt.bash
     - git/prompt.bash
     - completion.bash
     - arduino-cli/completion.bash
+    - gh/completion.bash
     - git/completion.bash
+    - hub/completion.bash
+    - hugo/completion.bash
     - go/completion.bash
+    - go/golangci-lint/completion.bash
     - rust/completion.bash
     - task/completion.bash
     - terminal.bash
+    - gh/terminal.bash
   - arduino:
     - arduino-cli.bash
   - segger:
@@ -35,5 +43,6 @@ env:
   - tinygo:
     - paths.bash
     - functions.bash
+    - aliases.bash
     - completion.bash
 

@@ -166,7 +166,7 @@ ino()
 	local args arg cmd cli configfile config fqbn port sketch userdir mode cmd compile upload build cache verbose verify setoutput binname writeconf autoconf
 
 	configfile=$( arduino-cli-config-file )
-	config=$( printf -- '--config-file "%s"' "$configfile" )
+	config=$( printf -- '--config-file '"$configfile" )
 	userdir=$( arduino-sketchbook )
 
 	# Trace, Debug, Info, Warning, Error, Fatal, Panic

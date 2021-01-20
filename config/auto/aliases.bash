@@ -46,12 +46,15 @@ alias locate-re="locate --regex"
 
 # tree
 if type -P tree &> /dev/null; then
-	alias    l.tree='command tree -i -f -D -A -C --dirsfirst'
-	alias   ll.tree='l.tree -p -u -g -s'
+	alias         t='command tree'
+	alias      tree='t -A -C -F --dirsfirst'
+	alias    l.tree='tree -i -f'
+	alias   ll.tree='l.tree -p -u -g -s -D'
 	alias   la.tree='ll.tree -a'
 	alias   ld.tree='ll.tree -d'
-	alias du-s.tree='l.tree -s'
-	alias du-h.tree='l.tree -h'
+	alias du-b.tree='tree -s --du'
+	alias du-s.tree='du-b.tree --sort=size'
+	alias du-h.tree='tree -h --du'
 fi
 
 # BeyondCompare

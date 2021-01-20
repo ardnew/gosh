@@ -1,5 +1,15 @@
 #!/bin/bash
 
+profiles() {
+	# print all of the currently active gosh profiles
+	perl -nle '
+		while (/(\((.*)\))|$/) {
+			printf "%d: %s$/", $n++, $`;
+			last unless $_ = $2
+		}
+	' <<< "${GOSH_PROFILE}"
+}
+
 escape() {
 	# escape bash metachars
 	local args="$@"

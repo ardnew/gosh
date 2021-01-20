@@ -25,3 +25,12 @@ is-host-darwin()  { return ${host_kind} -eq ${host_darwin}; }
 is-host-cygwin()  { return ${host_kind} -eq ${host_cygwin}; }
 is-host-freebsd() { return ${host_kind} -eq ${host_freebsd}; }
 is-host-mswsl()   { return ${host_kind} -eq ${host_mswsl}; }
+
+if [[ "${OSTYPE}" = *linux-gnu* ]]; then
+	if [[ "${uname_lower}" = *x86_64* ]]; then
+		target_triple="x86_64-unknown-linux-gnu"
+	elif [[ "${uname_lower}" = *aarch64* ]]; then
+		target_triple="aarch64-unknown-linux-gnu"
+	fi
+fi
+

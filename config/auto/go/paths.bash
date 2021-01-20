@@ -1,6 +1,10 @@
 #!/bin/bash
 
 case "${target_triple}" in
+	aarch64-unknown-linux-gnu)
+		os_go="linux"
+		arch_go="arm64"
+		;;
 	x86_64-unknown-linux-gnu)
 		os_go="linux"
 		arch_go="amd64"
@@ -8,16 +12,16 @@ case "${target_triple}" in
 esac
 
 case "${host_kind}" in
-	$host_linux)
+	${host_linux})
 		root_go="/usr/local/src/go/dev"
-		path_go="${HOME}/Code/go"
+		path_go="/usr/local/src/go"
 		path_goshfun="${HOME}/.local/bin/gosh"
 		;;
-	$host_darwin)
+	${host_darwin})
 		;;
-	$host_cygwin)
+	${host_cygwin})
 		;;
-	$host_mswsl)
+	${host_mswsl})
 		;;
 	*)
 		;;

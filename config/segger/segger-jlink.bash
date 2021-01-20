@@ -66,7 +66,7 @@ gdb_opt_init="--init-command=" # after loading inferior
 jlink-commander()
 {
   iface="SWD"
-  speed="4000"
+  speed="auto"
 
   device=$( __jlink-target-device ${@} )
   if [[ -n $device ]]
@@ -80,20 +80,26 @@ jlink-commander()
 jlink-gdbserver()
 {
   iface="SWD"
-  speed="4000"
+  speed="auto"
+  port="3333"
+  swoport="2332"
+  telnetport="2333"
+  endian="little"
+  select="USB=$serialno"
 
   device=$( __jlink-target-device ${@} )
   if [[ -n $device ]]
   then
     pushd "$jlink_path" &> "/dev/null"
-    "$gdbserver_bin" -if "$iface" -speed "$speed" -device "$device"
+    #"$gdbserver_bin" -if "$iface" -speed "$speed" -device "$device" -port "$port"
+	"$gdbserver_bin" -nosilent -swoport "$swoport" -select "$select" -telnetport "$telnetport" -endian "$endian" -noir -speed "$speed" -port "$port" -vd -device "$device" -if "$iface" -halt -reportuseraction
     popd &> "/dev/null"
   fi
 }
 
 __jlink-gdb-options()
 {
-  tcpport="2331"
+  tcpport="3333"
 
   symbols=$1
   if [[ -f "$symbols" ]]
@@ -132,8 +138,13 @@ GDB
       # add finishing options for restarting the target to the end of the gdbinit
       cat <<GDB >> "$gdbinit"
 file "$symbols"
-load
+shell sleep 0.2
 monitor reset
+shell sleep 0.2
+load
+shell sleep 0.2
+monitor reset
+shell sleep 0.2
 GDB
 
       echo $gdbinit
@@ -148,9 +159,20 @@ GDB
 
 jlink-gdb()
 {
-  gdbinit=$( __jlink-gdb-options $@ )
+  gdbinit=$( __jlink-gdb-options ${@:1:2} )
   [[ $? -eq 0 ]] || return $?
-  gdbcmd="$gdb_bin ${gdb_opt_init}${gdb_bin_init} ${gdb_opt_init}${gdbinit}"
+  gdb_args=()
+  if [[ $# -gt 2 ]]
+  then
+    shift # symbols
+    shift # target
+    while test $# -gt 0
+    do
+        gdb_args=( "${gdb_args[@]}" "$1" )
+        shift
+    done
+  fi
+  gdbcmd="$gdb_bin ${gdb_opt_init}${gdb_bin_init} ${gdb_opt_init}${gdbinit} ${gdb_args[@]}"
   echo "--------"
   echo $gdbcmd
   echo "--------"
@@ -213,16 +235,19 @@ use warnings;
 
 my @MCU =
   (
-    [ "ATmega328P",  qw| Metro Mini 328 | ],
-    [ "ATSAMD21G18", qw| Circuit Playground Express | ],
-    [ "ATSAMD21G18", qw| Hallowing M0 Express | ],
-    [ "ATSAMD21E18", qw| Gemma M0 | ],
-    [ "ATSAMD51J19", qw| Feather M4 Express | ],
-    [ "ATSAMD51P20", qw| Grand Central M4 Express | ],
-    [ "ATSAMD51J20", qw| PyPortal | ],
-    [ "ATSAMD51G19", qw| ItsyBitsy M4 Express | ],
-    [ "ATSAMD21E18", qw| Trinket M0 | ],
-    [ "STM32F405RG", qw| Feather STM32F405 Express | ],
+    [ "ATmega328P",      qw| Metro Mini 328 | ],
+    [ "ATSAMD21G18",     qw| Circuit Playground Express | ],
+    [ "ATSAMD21G18",     qw| Hallowing M0 Express | ],
+    [ "ATSAMD21E18",     qw| Gemma M0 | ],
+    [ "ATSAMD51J19",     qw| Feather M4 Express | ],
+    [ "ATSAMD51J19",     qw| Matrix Portal M4 | ],
+    [ "ATSAMD51P20",     qw| Grand Central M4 Express | ],
+    [ "ATSAMD51J20",     qw| PyPortal | ],
+    [ "ATSAMD21G18",	 qw| ItsyBitsy M0 Express | ],
+    [ "ATSAMD51G19",     qw| ItsyBitsy M4 Express | ],
+    [ "ATSAMD21E18",     qw| Trinket M0 | ],
+    [ "STM32F405RG",     qw| Feather STM32F405 Express | ],
+    [ "MIMXRT1062xxx6A", qw| MIMXRT1062-EVK | ],
   );
 
 sub combine { $_ = lc join "", @_; s/[\s\-_]*//g; quotemeta $_ }
