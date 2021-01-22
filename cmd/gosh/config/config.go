@@ -14,21 +14,27 @@ type Config struct {
 	Shell   string  `yaml:"shell"`
 	Args    ArgList `yaml:"args"`
 	CmdFlag string  `yaml:"cmdflag"`
-	Env     EnvList `yaml:"env"`
+	Env     EnvList `yaml:"profile"`
 }
 
-// SourceList contains names of files to be sourced by the shell environment.
-type SourceList []string
+// Attr stores the attributes for an individual shell configuration.
+type Attr struct {
+	Cwd string  `yaml:"cwd"`
+	Inc Include `yaml:"include"`
+}
+
+// Include contains names of files to be sourced by the shell environment.
+type Include []string
 
 // ArgList contains the positional arguments given to the shell command. Do NOT
 // include the command at position 0 (as required); it will be added for you.
 type ArgList []string
 
-// Source associates a named directory/environment with a SourceList.
-type Source map[string]SourceList
+// EnvAttr associates a named directory/profile with an Attr
+type EnvAttr map[string]Attr
 
-// EnvList contains the named environments able to be sourced.
-type EnvList []Source
+// EnvList contains the named profiles able to be activated.
+type EnvList []EnvAttr
 
 // ParseFile parses the YAML configuration into our tidy struct.
 func ParseFile(filePath string) (*Config, error) {
@@ -52,19 +58,19 @@ func (cfg *Config) String() string {
 		"shell", cfg.Shell,
 		"args", listBrace.encloseJoined(cfg.Args, ", "),
 		listBrace.lhs))
-	for i, env := range cfg.Env {
-		envList := []string{}
-		for name, src := range env {
-			srcList := make([]string, len(src))
-			for j, file := range src {
+	for i, e := range cfg.Env {
+		list := []string{}
+		for name, attr := range e {
+			srcList := make([]string, len(attr.Inc))
+			for j, file := range attr.Inc {
 				srcList[j] = enquote(file, true)
 			}
-			envList = append(envList, fmt.Sprintf("%q:%s", name, listBrace.encloseJoined(srcList, sep)))
+			list = append(list, fmt.Sprintf("%q:%s", name, listBrace.encloseJoined(srcList, sep)))
 		}
 		if i > 0 {
 			sb.WriteString(sep)
 		}
-		sb.WriteString(fmt.Sprintf("%s", dictBrace.encloseJoined(envList, sep)))
+		sb.WriteString(fmt.Sprintf("%s", dictBrace.encloseJoined(list, sep)))
 	}
 	sb.WriteString(fmt.Sprintf("%s%s", listBrace.rhs, dictBrace.rhs))
 	return sb.String()
