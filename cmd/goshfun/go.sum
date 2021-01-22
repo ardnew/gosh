@@ -1,5 +1,7 @@
 github.com/ardnew/version v0.2.0 h1:ezBjDoQtM3kD6Elyw5ccNGd1kiMLsw43I+mYcsWTGGk=
 github.com/ardnew/version v0.2.0/go.mod h1:7GxY1kszifKuE4EL1kVgN24jNh9KULdB93P6y6sZXLo=
+github.com/ardnew/version v0.2.1 h1:FxY3v3wVAs6P8iqlI8qcJitNl+Kd/Miw4QLHfLnnBzM=
+github.com/ardnew/version v0.2.1/go.mod h1:7GxY1kszifKuE4EL1kVgN24jNh9KULdB93P6y6sZXLo=
 github.com/juju/clock v0.0.0-20180524022203-d293bb356ca4/go.mod h1:nD0vlnrUjcjJhqN5WuCWZyzfd5AHZAC9/ajvbSx69xA=
 github.com/juju/errors v0.0.0-20150916125642-1b5e39b83d18/go.mod h1:W54LbzXuIE0boCoNJfwqpmkKJ1O4TCTZMetAt6jGk7Q=
 github.com/juju/errors v0.0.0-20200330140219-3fe23663418f h1:MCOvExGLpaSIzLYB4iQXEHP4jYVU6vmzLNQPdMVrxnM=

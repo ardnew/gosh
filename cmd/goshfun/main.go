@@ -5,6 +5,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"go/build"
 	"path/filepath"
 
@@ -23,30 +24,52 @@ func init() {
 			Description: []string{
 				`initial commit`,
 			},
+		}, {
+			Package: "goshfun",
+			Version: "0.1.1",
+			Date:    "January 22, 2021",
+			Description: []string{
+				`add math/bits as default package`,
+				`refactor output, include goimports install tip`,
+				`change default output name: fun`,
+			},
 		},
 	}
 }
 
-const outputName = "gof"
-
-var outputSyms = "gosh"
+const (
+	defaultName = "fun"
+	defaultSyms = "gosh"
+)
 
 func main() {
 
 	var (
-		argRoot string
-		argPkg  pkg.Pkg
-		argOut  string
-		argSym  string
+		argChanges bool
+		argVersion bool
+		argRoot    string
+		argPkg     pkg.Pkg
+		argOut     string
+		argSym     string
 	)
 
-	outputSyms = filepath.Join(outputName, outputSyms)
+	outputName := defaultName
+	outputSyms := filepath.Join(defaultName, defaultSyms)
 
+	flag.BoolVar(&argChanges, "changelog", false, "display change history")
+	flag.BoolVar(&argVersion, "version", false, "display version information")
 	flag.StringVar(&argRoot, "root", build.Default.GOROOT, "path to GOROOT (must contain src)")
-	flag.Var(&argPkg, "pkg", "generate interfaces for functions from package `path`. may be specified multiple times. (default \"strings\",\"math\",\"path/filepath\")")
-	flag.StringVar(&argOut, "out", outputName, "name of the generated executable")
+	flag.Var(&argPkg, "pkg", "generate interfaces for functions from package `path`. may be specified multiple times. (default \"strings\",\"math\",\"math/bits\",\"path/filepath\")")
+	flag.StringVar(&argOut, "out", outputName, "name of the output directory and generated executable")
 	flag.StringVar(&argSym, "sym", outputSyms, "path to install generated symlinks (or do not generate if empty)")
 	flag.Parse()
 
-	run.Run(argRoot, argOut, argSym, argPkg)
+	if argChanges {
+		version.PrintChangeLog()
+	} else if argVersion {
+		fmt.Printf("goshfun version %s\n", version.String())
+	} else {
+		// main
+		run.Run(argRoot, argOut, argSym, argPkg)
+	}
 }

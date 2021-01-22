@@ -13,12 +13,11 @@ import (
 	// "github.com/juju/errors"
 )
 
-const outputName = "fun"
-
 // pkgDefault defines which Go standard library packages to generate supporting
 // interfaces for if the -pkg flag is not provided.
 var pkgDefault = pkg.Pkg{
 	"math",
+	"math/bits",
 	"path/filepath",
 	"strings",
 }
@@ -46,7 +45,7 @@ func Run(root, out, sym string, p pkg.Pkg) {
 	defer srcFile.Close()
 
 	// generate the parsers/formatters source, pretty printed
-	fmt.Printf("---\ncreating Go source srcFile: %s\n", srcPath)
+	fmt.Printf("creating Go source file: %s\n", srcPath)
 	prt := print.NewPrinter(srcFile, rootPath)
 	prt.PrintHeader(pkgs)
 	prt.PrintBody()
@@ -55,24 +54,32 @@ func Run(root, out, sym string, p pkg.Pkg) {
 	}
 
 	// run goimports to clean up imports and format the resulting source code
-	fmt.Printf("---\nrunning goimports: %s\n", srcPath)
-	goimports := execCmd(out, "goimports", "-w", "main.go")
-	if len(goimports) > 0 {
+	fmt.Printf("running goimports: %s\n", srcPath)
+	goimports, err := execCmd(out, "goimports", "-w", "main.go")
+	if nil != err {
+		fmt.Printf("error: goimports: %v\n", err)
+		fmt.Printf("tip: make sure goimports is installed (and in your PATH):\n")
+		fmt.Printf("	go get -v golang.org/x/tools/cmd/goimports\n")
+		os.Exit(2)
+	} else if len(goimports) > 0 {
 		fmt.Printf("%s\n", goimports)
 	}
 
 	// compile the resulting source code into a command-line executable
-	fmt.Printf("---\nrunning go build: %s\n", srcPath)
-	gobuild := execCmd(out, "go", "build")
-	if len(gobuild) > 0 {
+	fmt.Printf("running go build: %s\n", srcPath)
+	gobuild, err := execCmd(out, "go", "build")
+	if nil != err {
+		fmt.Printf("error: go build: %v\n", err)
+		os.Exit(3)
+	} else if len(gobuild) > 0 {
 		fmt.Printf("%s\n", gobuild)
 	}
 
 	binPath := filepath.Join(out, out)
-	fmt.Printf("---\ndone: executable created: %s\n", binPath)
+	fmt.Printf("done! executable created: %s\n", binPath)
 
 	if "" != sym {
-		fmt.Printf("---\ncreating symlinks to executable: %s\n", sym)
+		fmt.Printf("creating symlinks to executable: %s\n", sym)
 		outputSymlinks(srcPath, binPath, sym, pkgs)
 	}
 }
@@ -110,12 +117,8 @@ func outputSymlinks(src, bin, sym string, pkgs map[string]*parse.Package) {
 	}
 }
 
-func execCmd(dir, cmd string, arg ...string) []byte {
+func execCmd(dir, cmd string, arg ...string) ([]byte, error) {
 	c := exec.Command(cmd, arg...)
 	c.Dir = dir
-	o, err := c.CombinedOutput()
-	if nil != err {
-		panic(err)
-	}
-	return o
+	return c.CombinedOutput()
 }
