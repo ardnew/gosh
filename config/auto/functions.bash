@@ -12,14 +12,20 @@ profiles() {
 
 cd() {
 	if [[ $# -gt 0 ]]; then
-		pushd ${@} &> /dev/null
+		if ! pushd "${@}" &> /dev/null; then
+			printf -- 'cd: failed to change directory: %s\n' "${@}"
+		fi
 	else
-		pushd "${HOME}" &> /dev/null
+		if ! pushd "${HOME}" &> /dev/null; then
+			printf -- 'cd: failed to change directory: HOME=%s\n' "${HOME}"
+		fi
 	fi
 }
 
 cb() {
-	popd ${@} &> /dev/null
+	if ! popd "${@}" &> /dev/null; then
+		printf -- 'cb: failed to pop directory stack\n'
+	fi
 }
 
 up() {
