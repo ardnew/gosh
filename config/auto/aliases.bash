@@ -11,6 +11,11 @@ alias    lm="ll -A"
 alias    g="command grep"
 alias grep="g --color=always --perl-regexp -I"
 
+# cat
+if type -P bat &> /dev/null; then
+	alias cat='bat --paging=never --plain'
+fi
+
 # base conversions
 alias d2h="perl -e 'printf qq|%X$/|, int(shift)'"
 alias d2o="perl -e 'printf qq|%o$/|, int(shift)'"
@@ -63,4 +68,5 @@ if type -p bcompare &> /dev/null; then
 fi
 
 # utility
+alias reload-groups='exec sudo su -l $USER'
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'

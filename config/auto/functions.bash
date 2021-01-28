@@ -10,6 +10,32 @@ profiles() {
 	' <<< "${GOSH_PROFILE}"
 }
 
+cd() {
+	if [[ $# -gt 0 ]]; then
+		pushd ${@} &> /dev/null
+	else
+		pushd "${HOME}" &> /dev/null
+	fi
+}
+
+cb() {
+	popd ${@} &> /dev/null
+}
+
+up() {
+	if [[ "${PWD}" = '/' ]]; then
+		printf -- 'up: no parent directory\n'
+	else
+		path="${PWD}"
+		parent='..'
+		while ! pushd "${parent}" &> /dev/null; do
+			[[ "${path}" = '/' ]] && return -1
+			path=$( dirname "${path}" )
+			parent="${path}"
+		done
+	fi
+}
+
 escape() {
 	# escape bash metachars
 	local args="$@"

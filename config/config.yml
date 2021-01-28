@@ -9,17 +9,23 @@ env:
     - git/paths.bash
     - go/paths.bash
     - perl/paths.bash
+    - poetry/paths.bash
+    - restic/paths.bash
     - rust/paths.bash
     - java/paths.bash
     - openocd/paths.bash
     - hub/paths.bash
+    - bat/paths.bash
     - hugo/paths.bash
     - duc/paths.bash
+    - mutt/paths.bash
+    - pgp/paths.bash
     - colors.bash
     - functions.bash
     - openocd/functions.bash
     - hub/functions.bash
     - duc/functions.bash
+    - restic/functions.bash
     - aliases.bash
     - hub/aliases.bash
     - prompt.bash
@@ -32,6 +38,8 @@ env:
     - hugo/completion.bash
     - go/completion.bash
     - go/golangci-lint/completion.bash
+    - poetry/completion.bash
+    - restic/completion.bash
     - rust/completion.bash
     - task/completion.bash
     - terminal.bash
