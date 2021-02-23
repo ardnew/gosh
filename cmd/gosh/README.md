@@ -27,7 +27,7 @@ Just to get up and running, I recommend using the [demo included with this repo]
 
 3. Execute `gosh`, and you should see a familiar shell, but what you don't see is that it is being managed by a Go application! 
 
-To see we are a Go sub-process, re-run `gosh` with the following arguments, `gosh -l standard -g`, and you'll see the `gosh` runtime spewing out some debugging information regarding how the shell process was spawned. You'll see more once you close the shell (via `exit` or `^D`)
+To see we are a Go sub-process, re-run `gosh` with the debug argument, `gosh -g`, and you'll see the `gosh` runtime spewing out some debugging information regarding how the shell process was spawned. You'll see more once you close the shell (via `exit` or `^D`)
 
 All available command-line arguments:
 
