@@ -32,34 +32,44 @@ To see we are a Go sub-process, re-run `gosh` with the following arguments, `gos
 All available command-line arguments:
 
 |Flag name|Type|Description|
-|:--:|:--:|:----------|
-|`-c`|`string`|path to the primary configuration file (default `~/.config/gosh/config.yml`)|
-|`-g`|`bool`|enable debug message logging|
-|`-l`|`string`|output log handler (`null`, `standard`, `ascii`, `json`) (default `null`)|
-|`-o`|`bool`|do NOT inherit the environment from current process, i.e., orphan|
+|:-------:|:--:|:----------|
+|`-a`|`bool`|Print the application changelog.|
+|`-c`|`string`|Run **command** with modified environment instead of starting a new shell.|
+|`-f`|`string`|Use an alternate configuration file located at **path**. Profile paths are relative to this configuration file. (default `${HOME}/.config/gosh/config.yml`)|
+|`-g`|`bool`|Enable debug message logging (implies [`-l "standard"`] unless log format specified).|
+|`-l`|`string`|Specify the output log **format** [`null`, `standard`, `ascii`, `json`]. (default `null`)|
+|`-o`|`bool`|Do NOT inherit (i.e., orphan) the environment from current process; or, if generating an init file, do NOT export the current environment.|
+|`-p`|`string`|Load files defined in configuration **profile**; may be specified multiple times.|
+|`-s`|`bool`|Print the generated init file instead of using it to start a new shell.|
+|`-v`|`bool`|Print application version.|
 
 ## Configuration
 
-The following example configuration file demonstrates **a.**) how to specify which shell to invoke, **b.**) how to add flags to it (and how to refer to the dynamically-generated initialization script, **c.**) how to define a profile (and its directory name), and **d.**) how to define which files to include when loading a profile.
+The following is an example configuration file that demonstrates how to: 
+
+ 1. Specify which shell to invoke
+ 2. Add command-line flags to your real shell (and how to refer to the dynamically-generated initialization script) 
+ 3. Define a profile (and its directory name)
+ 4. Define which files to include when loading a profile
 
 ```yaml
 ---
-shell: /bin/bash                    #   (a.)
-args: [ --rcfile, __GOSH_INIT__ ]   #   (b.)
+shell: /bin/bash                    #   (1.)
+args: [ --rcfile, __GOSH_INIT__ ]   #   (2.)
 env:
-  - auto:                           #   (c.)
-    - host.bash                     #   (d.)
-    - paths.bash                    #   (d.)
+  - auto:                           #   (3.)
+    - host.bash                     #   (4.)
+    - paths.bash                    #   (4.)
     - terminal.bash                 #   ...
     - colors.bash
     - functions.bash
     - aliases.bash
     - prompt.bash
     - completion.bash
-  - arduino:                        #   (c.)
-    - arduino-cli.bash              #   (d.)
-  - segger:                         #   (c.)
-    - segger-jlink.bash             #   (d.)
+  - arduino:                        #   (3.)
+    - arduino-cli.bash              #   (4.)
+  - segger:                         #   (3.)
+    - segger-jlink.bash             #   (4.)
 
 ```
 
