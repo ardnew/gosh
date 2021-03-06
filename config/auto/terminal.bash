@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# search for a vi executable (in decreasing precedence, from left-to-right)
 if e=$( type -P nvim ) || e=$( type -P vim ) || e=$( type -P vi ); then
 	EDITOR=$( readlink -f "${e}" )
 fi

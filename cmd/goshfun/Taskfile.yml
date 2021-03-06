@@ -5,7 +5,10 @@ version: '2'
 vars:
   OUTPUT_DIR: "../../dist"
   OUTPUT_BIN: "goshfun"
-  VERSION_ID: "goshfun0.1.1"
+  VERSION_ID: "goshfun{{.VERSION_NB}}"
+  VERSION_NB:
+    sh: go run . -v | command grep -oP ' version \K.+'
+    msg: "failed to get goshfun version"
   SOURCE_DIR: "."
   SOURCE_EXT: ".{go}" # filename extension of source files (uses shell expansion)
 

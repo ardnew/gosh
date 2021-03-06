@@ -3,6 +3,7 @@
 case "${host_kind}" in
 	${host_linux})
 		path_pgp="${HOME}/.gnupg"
+		sock_ssh=$( gpgconf --list-dirs agent-ssh-socket )
 		;;
 	${host_darwin})
 		;;
@@ -14,7 +15,15 @@ case "${host_kind}" in
 		;;
 esac
 
-[[ -d "${path_pgp}" ]] && PGPPATH="${path_pgp}"
+if [[ -d "${path_pgp}" ]]; then
+	PGPPATH="${path_pgp}"
+	GNUPGHOME="${path_pgp}"
+fi
 
-export PGPPATH
+if [[ -S "${sock_ssh}" ]]; then
+	# don't export unless our socket really exists
+	export SSH_AUTH_SOCK="${sock_ssh}"
+fi
+
+export PGPPATH GNUPGHOME
 

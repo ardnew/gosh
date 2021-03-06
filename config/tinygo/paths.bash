@@ -10,7 +10,8 @@ case "${host_kind}" in
 	$host_linux)
 		root_tinygo="/usr/local/src/tinygo"
 		path_tinygo="${GOPATH}"
-		dev_go="/usr/local/src/go/dev"
+		# uncomment once TinyGo supports mainline Go
+		#dev_go="/usr/local/src/go/dev"
 		bootstrap_go="/usr/local/lib/go1.15.4"
 		;;
 	$host_darwin)

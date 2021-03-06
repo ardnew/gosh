@@ -1,8 +1,7 @@
 #!/bin/bash
 
-mutt_email="andrew@ardnew.com"
-mutt_mail="/var/mail/andrew"
+mutt_mail="/var/mail/${USER}"
 
 [[ -f "${mutt_mail}" ]] && MAIL="${mutt_mail}"
 
-export EMAIL="${mutt_email}" MAIL
+export MAIL

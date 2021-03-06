@@ -62,9 +62,26 @@ if type -P tree &> /dev/null; then
 	alias du-h.tree='tree -h --du'
 fi
 
+# terminal
+if type -p tput &> /dev/null; then
+	alias lastcol='echo $(( $( tput cols ) - 1 ))'
+fi
+
+# diff
+alias diff='diff --report-identical-files --suppress-blank-empty --new-file --no-ignore-file-name-case --minimal --speed-large-files --color=always'
+alias diff.u='diff --unified'
+alias diff.c='diff --show-c-function'
+if type -p tput &> /dev/null; then
+	alias diff.col='diff --side-by-side --width=$( lastcol )'
+fi
+
 # BeyondCompare
 if type -p bcompare &> /dev/null; then
 	alias bdiff='bcompare'
+fi
+
+if type -p mark-my-words &> /dev/null; then
+	alias md='mark-my-words'
 fi
 
 # utility

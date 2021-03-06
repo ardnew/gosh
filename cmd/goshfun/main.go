@@ -22,16 +22,27 @@ func init() {
 			Version: "0.1.0",
 			Date:    "July 7, 2020",
 			Description: []string{
-				`initial commit`,
+				`+ Initial commit`,
 			},
 		}, {
 			Package: "goshfun",
 			Version: "0.1.1",
 			Date:    "January 22, 2021",
 			Description: []string{
-				`add math/bits as default package`,
-				`refactor output, include goimports install tip`,
-				`change default output name: fun`,
+				`+ Add math/bits as default package`,
+				`+ Refactor output, include goimports install tip`,
+				`% Change default output name: fun`,
+			},
+		}, {
+			Package: "goshfun",
+			Version: "0.1.2",
+			Date:    "March 6, 2021",
+			Description: []string{
+				`+ Add regexp as default package`,
+				`% Fix build command for compatibility with modules-enabled Go (1.16)`,
+				`- Move go.mod file to root package path github.com/ardnew/gosh`,
+				`% Rename command-line flags to simpler, abbreviated form:`,
+				`    -r=-root -p=-pkg -o=-out -s=-sym -v=-version -V=-changelog  (new=old)`,
 			},
 		},
 	}
@@ -56,12 +67,12 @@ func main() {
 	outputName := defaultName
 	outputSyms := filepath.Join(defaultName, defaultSyms)
 
-	flag.BoolVar(&argChanges, "changelog", false, "display change history")
-	flag.BoolVar(&argVersion, "version", false, "display version information")
-	flag.StringVar(&argRoot, "root", build.Default.GOROOT, "path to GOROOT (must contain src)")
-	flag.Var(&argPkg, "pkg", "generate interfaces for functions from package `path`. may be specified multiple times. (default \"strings\",\"math\",\"math/bits\",\"path/filepath\")")
-	flag.StringVar(&argOut, "out", outputName, "name of the output directory and generated executable")
-	flag.StringVar(&argSym, "sym", outputSyms, "path to install generated symlinks (or do not generate if empty)")
+	flag.BoolVar(&argChanges, "V", false, "display change history")
+	flag.BoolVar(&argVersion, "v", false, "display version information")
+	flag.StringVar(&argRoot, "r", build.Default.GOROOT, "path to GOROOT (must contain src)")
+	flag.Var(&argPkg, "p", "generate interfaces for functions from package `path`. may be specified multiple times. (default \"strings\",\"math\",\"math/bits\",\"path/filepath\",\"regexp\")")
+	flag.StringVar(&argOut, "o", outputName, "name of the output directory and generated executable")
+	flag.StringVar(&argSym, "s", outputSyms, "path to install generated symlinks (or do not generate if empty)")
 	flag.Parse()
 
 	if argChanges {

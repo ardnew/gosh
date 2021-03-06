@@ -31,17 +31,17 @@ To see we are a Go sub-process, re-run `gosh` with the debug argument, `gosh -g`
 
 All available command-line arguments:
 
-|Flag name|Type|Description|
-|:-------:|:--:|:----------|
-|`-a`|`bool`|Print the application changelog.|
-|`-c`|`string`|Run **command** with modified environment instead of starting a new shell.|
-|`-f`|`string`|Use an alternate configuration file located at **path**. Profile paths are relative to this configuration file. (default `${HOME}/.config/gosh/config.yml`)|
-|`-g`|`bool`|Enable debug message logging (implies [`-l "standard"`] unless log format specified).|
-|`-l`|`string`|Specify the output log **format** [`null`, `standard`, `ascii`, `json`]. (default `null`)|
-|`-o`|`bool`|Do NOT inherit (i.e., orphan) the environment from current process; or, if generating an init file, do NOT export the current environment.|
-|`-p`|`string`|Load files defined in configuration **profile**; may be specified multiple times.|
-|`-s`|`bool`|Print the generated init file instead of using it to start a new shell.|
-|`-v`|`bool`|Print application version.|
+|Flag name|Argument|Description|
+|:-------:|:------:|:----------|
+|`-c`|`command`|Run `command` with modified environment instead of starting a new shell.|
+|`-f`|`path`|Use an alternate configuration file located at `path`. Profile paths are relative to this configuration file. (default `${HOME}/.config/gosh/config.yml`)|
+|`-g`|`(bool)`|Enable debug message logging (implies [-l "standard"] unless log format specified).|
+|`-l`|`format`|Specify the output log `format` [null, standard, ascii, json]. (default "null")|
+|`-o`|`(bool)`|Do NOT inherit (i.e., orphan) the environment from current process; or, if generating an init file, do NOT export the current environment.|
+|`-p`|`profile`|Load files defined in configuration `profile`; may be specified multiple times.|
+|`-s`|`(bool)`|Print the generated init file instead of using it to start a new shell.|
+|`-v`|`(bool)`|Print application version.|
+|`-V`|`(bool)`|Print the application changelog.|
 
 ## Configuration
 
@@ -57,19 +57,19 @@ The following is an example configuration file that demonstrates how to:
 shell: /bin/bash                    #   (1.)
 args: [ --rcfile, __GOSH_INIT__ ]   #   (2.)
 env:
-  - auto:                           #   (3.)
-    - host.bash                     #   (4.)
-    - paths.bash                    #   (4.)
+  - auto:                           #   (3.)  /path/to/config.yml/auto
+    - host.bash                     #   (4.)  /path/to/config.yml/auto/host.bash
+    - paths.bash                    #   (4.)  /path/to/config.yml/auto/paths.bash
     - terminal.bash                 #   ...
     - colors.bash
     - functions.bash
     - aliases.bash
     - prompt.bash
     - completion.bash
-  - arduino:                        #   (3.)
-    - arduino-cli.bash              #   (4.)
-  - segger:                         #   (3.)
-    - segger-jlink.bash             #   (4.)
+  - arduino:                        #   (3.)  /path/to/config.yml/arduino
+    - paths.bash                    #   (4.)  /path/to/config.yml/arduino/paths.bash
+  - segger:                         #   (3.)  /path/to/config.yml/segger
+    - paths.bash                    #   (4.)  /path/to/config.yml/segger/paths.bash
 
 ```
 

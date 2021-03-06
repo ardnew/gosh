@@ -19,6 +19,7 @@ var pkgDefault = pkg.Pkg{
 	"math",
 	"math/bits",
 	"path/filepath",
+	"regexp",
 	"strings",
 }
 
@@ -26,13 +27,15 @@ var pkgDefault = pkg.Pkg{
 // and finally the compiler to build the executable.
 func Run(root, out, sym string, p pkg.Pkg) {
 
+	const srcRoot, srcMain = "src", "main.go"
+
 	// use the default packages if none were specified
 	if len(p) == 0 {
 		p = append(p, pkgDefault...)
 	}
 
 	// path to Go sources
-	rootPath := filepath.Join(root, "src")
+	rootPath := filepath.Join(root, srcRoot)
 
 	// parse sources, gathering all supported function prototypes
 	pkgs, err := p.Parse(rootPath)
@@ -41,7 +44,7 @@ func Run(root, out, sym string, p pkg.Pkg) {
 	}
 
 	// create generated output source file
-	srcFile, srcPath := outputFile(out, "main.go")
+	srcFile, srcPath := outputFile(out, srcMain)
 	defer srcFile.Close()
 
 	// generate the parsers/formatters source, pretty printed
@@ -55,7 +58,7 @@ func Run(root, out, sym string, p pkg.Pkg) {
 
 	// run goimports to clean up imports and format the resulting source code
 	fmt.Printf("running goimports: %s\n", srcPath)
-	goimports, err := execCmd(out, "goimports", "-w", "main.go")
+	goimports, err := execCmd(out, "goimports", "-w", srcMain)
 	if nil != err {
 		fmt.Printf("error: goimports: %v\n", err)
 		fmt.Printf("tip: make sure goimports is installed (and in your PATH):\n")
@@ -67,7 +70,7 @@ func Run(root, out, sym string, p pkg.Pkg) {
 
 	// compile the resulting source code into a command-line executable
 	fmt.Printf("running go build: %s\n", srcPath)
-	gobuild, err := execCmd(out, "go", "build")
+	gobuild, err := execCmd(out, "go", "build", "-o", out, srcMain)
 	if nil != err {
 		fmt.Printf("error: go build: %v\n", err)
 		os.Exit(3)

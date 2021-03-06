@@ -97,7 +97,7 @@ tinygo-subl() {
 			printf 'export GOROOT="%s"\n' "${goroot}"
 			export GOROOT="${goroot}"
 
-			subl
+			subl "${@}"
 		fi
 	fi
 }

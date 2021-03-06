@@ -48,6 +48,35 @@ escape() {
 	printf "$args" | sed -e "s/'/'\\\\''/g; 1s/^/'/; \$s/\$/'/"
 }
 
+abspath() {
+	# use PWD if no argument provided
+	local path="${PWD}"
+	[[ ${#} -gt 0 ]] && path="${1}"
+	# several different ways to obtain the absolute path to a file, but not all
+	# systems have all of these tools. check for preferred tooling in-order
+	# until one is found.
+	abs=( 
+		'filepath.Abs'  ''    # goshfun
+		'realpath'      '-mP' # newer coreutils
+		'readlink'      '-f'  # older coreutils
+	)
+	for (( i = 0; i < ${#abs[@]}; i += 2 )); do
+		local -a cmd=( "${abs[${i}]}" ) 
+		[[ ${#abs[((i+1))]} -gt 0 ]] && 
+			cmd+=( "${abs[((i+1))]}" ) # append args if non-empty
+		type -t "${cmd[0]}" &> /dev/null &&
+			"${cmd[@]}" "${path}" 2> /dev/null && break
+	done
+}
+
+exepath() {	
+	abspath "${0}"
+}
+
+exedir() { 
+	dirname "$( exepath )"
+}
+
 manbuiltin() {
 	# easy access to bash built-ins
 	man bash | less -p "^ {4,7}$1 "
@@ -97,3 +126,4 @@ rgb2hex() {
 hex2rgb() {
 	perl -le '@_=map{oct("0x$_")/0xFF}(shift=~/../g);print"@_[@_-3..$#_]"' $@
 }
+

@@ -44,6 +44,7 @@ env:
     - task/completion.bash
     - terminal.bash
     - gh/terminal.bash
+    - git/terminal.bash
   - arduino:
     - arduino-cli.bash
   - segger:

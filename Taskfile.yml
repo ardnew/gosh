@@ -1,0 +1,52 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  OUTPUT_DIR: ./dist
+  GOSH_VERSION:
+    sh: go run ./cmd/gosh -v | command grep -oP ' version \K.+'
+    msg: "failed to determine gosh version" 
+  GOSHFUN_VERSION:
+    sh: go run ./cmd/goshfun -v | command grep -oP ' version \K.+'
+    msg: "failed to determine goshfun version" 
+
+tasks:
+
+  default:
+    cmds: 
+      - task: clean
+      - task: archive
+
+  clean:
+    cmds:
+      - rm -rf '{{.OUTPUT_DIR}}'
+      - mkdir -p '{{.OUTPUT_DIR}}'
+
+  archive:
+    deps:
+      - gosh
+      - goshfun
+    dir: '{{.OUTPUT_DIR}}'
+    cmds:
+      - |
+        find . -type d \( -name "gosh" -or -name "goshfun" \) -print0 |
+          xargs -0 -- tar -cvf '{{.OUTPUT_PKG}}' -I 'xz -vzke -T0'
+    vars:
+      OUTPUT_PKG: 'gosh-{{.GOSH_VERSION}}+{{.GOSHFUN_VERSION}}.tar.xz'
+    sources:
+      - ./*/gosh/**/*.go
+      - ./*/goshfun/**/*.go
+    generates:
+      - '{{.OUTPUT_PKG}}'
+
+  gosh:
+    dir: ./cmd/gosh
+    cmds:
+      - task release
+
+  goshfun:
+    dir: ./cmd/goshfun
+    cmds:
+      - task release
+

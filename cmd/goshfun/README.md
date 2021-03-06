@@ -1,11 +1,11 @@
  # cmd/goshfun
  ### Generate command-line interface for Go library functions
 
-The intent of `goshfun` is to automatically generate a command-line interface to much of the Go standard library. This means functions like `strings.Join`, `path/filepath.Split`, `math.Min`/`math.Max`, and a vast number of other really useful utilities, some of which not directly available in most modern shells, can be used directly from the command-line, using shell syntax, without having to write and compile any Go code whatsoever.
+The intent of `goshfun` is to automatically generate a command-line interface to much of the Go standard library. This means functions like `strings.Join`, `path/filepath.Split`, `math.Min`/`math.Max`, `regexp.QuoteMeta`, and a vast number of other really useful utilities, some of which not directly available in most modern shells, can be used directly from the command-line, using shell syntax, without having to write and compile any Go code whatsoever.
 
 ## Quickstart
 
-Running `goshfun` without any arguments will generate shell interfaces for the default packages `strings`, `math`, `math/bits`, and `path/filepath`.
+Running `goshfun` without any arguments will generate shell interfaces for the default packages `strings`, `math`, `math/bits`, `path/filepath`, and `regexp`.
 
 1. Install package: `$ go get -v github.com/ardnew/gosh/cmd/goshfun`
 
@@ -47,10 +47,10 @@ All available command-line arguments for `goshfun`:
 
 |Flag name|Type|Description|
 |:--:|:--:|:----------|
-|`-out`|`string`|name of the output directory and generated executable (default `fun`)|
-|`-pkg`|`string`|generate interfaces for functions from package path. may be specified multiple times. (default `strings`,`math`,`math/bits`,`path/filepath`)|
-|`-root`|`string`|path to GOROOT (must contain src) (default `/usr/local/src/go/dev`)|
-|`-sym`|`string`|path to install generated symlinks (or do not generate if empty) (default `fun/gosh`)|
+|`-o`|`string`|name of the output directory and generated executable (default `fun`)|
+|`-p`|`string`|generate interfaces for functions from package path. may be specified multiple times. (default `strings`,`math`,`math/bits`,`path/filepath`)|
+|`-r`|`string`|path to GOROOT (must contain src) (default `/usr/local/src/go/dev`)|
+|`-s`|`string`|path to install generated symlinks (or do not generate if empty) (default `fun/gosh`)|
 
 And all available command-line arguments for the `goshfun`-generated executable (`fun` by default):
 
@@ -78,7 +78,7 @@ Also, the following compositions are supported on any individual named argument 
 - Slice/array `[]` of: primitive or pointer to primitive
 - Variable list `...` of: primitive or pointer to primitive
 
-With these limitations, the following functions are automatically included based on the default package selections (`strings`, `math`, `math/bits`, and `path/filepath`), and have the indicated shell command prototype/signature. Many more functions from the Go standard library are supported, but must be explicitly requested via the `-pkg` flag to `goshfun`.
+With these limitations, the following functions are automatically included based on the default package selections (`strings`, `math`, `math/bits`, `path/filepath`, and `regexp`), and have the indicated shell command prototype/signature. Many more functions from the Go standard library are supported, but must be explicitly requested via the `-p` flag to `goshfun`.
 
 ```
         package math:
@@ -217,6 +217,10 @@ With these limitations, the following functions are automatically included based
                 SplitList: path -> ...string
                 ToSlash: path -> string
                 VolumeName: path -> string
+        package regexp:
+                Match: pattern ...b -> matched err
+                MatchString: pattern s -> matched err
+                QuoteMeta: s -> string
         package strings:
                 Compare: a b -> int
                 Contains: s substr -> bool

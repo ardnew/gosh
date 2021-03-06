@@ -1,7 +1,9 @@
 package shell
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -28,78 +30,141 @@ func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (
 	if err != nil {
 		return errors.Trace(err), nil
 	}
-	defer os.Remove(initFile.Name())
+	defer os.Remove(initFile)
 
 	var env []string
 	if !p.OrphanEnviron {
 		env = os.Environ()
 	}
 
-	const proKey = "GOSH_PROFILE"
-	proVal := strings.Join(profiles, ",")
+	const initKey = "GOSH_INIT"
+	initVal := initFile
 
-	hasPro := false
+	const profKey = "GOSH_PROFILE"
+	profVal := strings.Join(profiles, ",")
+
+	envHasProf, envHasInit := false, false
 	for i, e := range env {
 		v := strings.SplitN(e, "=", 2)
 		if len(v) > 0 {
-			if v[0] == proKey {
+			switch v[0] {
+			case initKey:
+				// redefine the init file if it already exists in the env
+				env[i] = fmt.Sprintf("%s=%s", initKey, initVal)
+				envHasInit = true
+			case profKey:
 				if len(v) > 1 {
 					// keep the profiles that were already set previously
-					proVal = fmt.Sprintf("%s(%s)", proVal, v[1])
+					profVal = fmt.Sprintf("%s(%s)", profVal, v[1])
 				}
-				env[i] = fmt.Sprintf("%s=%s", proKey, proVal)
-				hasPro = true
+				env[i] = fmt.Sprintf("%s=%s", profKey, profVal)
+				envHasProf = true
 			}
 		}
 	}
 
-	if !hasPro {
-		env = append(env, fmt.Sprintf("%s=%s", proKey, proVal))
+	// do not append init file if we are only generating it (it will be deleted)
+	if !envHasInit && !p.GenerateInit {
+		env = append(env, fmt.Sprintf("%s=%s", initKey, initVal))
 	}
 
-	exp := config.NewArgExpansion(initFile.Name(), p.ShellArgs...)
-	arg := exp.ExpandArgs(unique(append([]string{c.Shell}, c.Args...)...)...)
-
-	if "" != p.ShellCommand {
-		arg = append(arg, c.CmdFlag, p.ShellCommand)
+	if !envHasProf {
+		env = append(env, fmt.Sprintf("%s=%s", profKey, profVal))
 	}
 
-	wd, wdErr := os.Getwd()
-	if nil != wdErr {
-		wd = p.App.HomeDir()
+	if p.GenerateInit {
+
+		return nil, errors.Trace(copyInit(os.Stdout, env, initFile, p, c))
+
+	} else {
+
+		exp := config.NewArgExpansion(initFile, p.ShellArgs...)
+		arg := exp.ExpandArgs(unique(append([]string{c.Shell}, c.Args...)...)...)
+
+		if "" != p.ShellCommand {
+			arg = append(arg, c.CmdFlag, p.ShellCommand)
+		}
+
+		wd, wdErr := os.Getwd()
+		if nil != wdErr {
+			wd = p.App.HomeDir()
+		}
+
+		l.Context().
+			WithField("shell", c.Shell).
+			WithField("args", fmt.Sprintf("[%s]", strings.Join(arg, ", "))).
+			WithField("env", fmt.Sprintf("[%s]", strings.Join(env, ", "))).
+			WithField("dir", wd).
+			WithField("stdin", os.Stdin.Name()).
+			WithField("stdout", os.Stdout.Name()).
+			WithField("stderr", os.Stderr.Name()).
+			Debug("execute")
+
+		shell := &Shell{Cmd: &exec.Cmd{
+			Path:   c.Shell,
+			Args:   arg,
+			Env:    env,
+			Dir:    wd,
+			Stdin:  os.Stdin,
+			Stdout: os.Stdout,
+			Stderr: os.Stderr,
+		}}
+
+		return nil, errors.Trace(shell.Cmd.Run())
 	}
-
-	l.Context().
-		WithField("shell", c.Shell).
-		WithField("args", fmt.Sprintf("[%s]", strings.Join(arg, ", "))).
-		WithField("env", fmt.Sprintf("[%s]", strings.Join(env, ", "))).
-		WithField("dir", wd).
-		WithField("stdin", os.Stdin.Name()).
-		WithField("stdout", os.Stdout.Name()).
-		WithField("stderr", os.Stderr.Name()).
-		Debug("execute")
-
-	shell := &Shell{Cmd: &exec.Cmd{
-		Path:   c.Shell,
-		Args:   arg,
-		Env:    env,
-		Dir:    wd,
-		Stdin:  os.Stdin,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-	}}
-
-	return nil, errors.Trace(shell.Cmd.Run())
 }
 
-func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (*os.File, []string, error) {
+func copyInit(out io.Writer, env []string, init string, par *config.Parameters, cfg *config.Config) error {
+
+	// open the init file for reading
+	fh, err := os.Open(init)
+	if nil != err {
+		return errors.Trace(err)
+	}
+	defer fh.Close()
+
+	// first line is always the interpreter
+	bang := fmt.Sprintf("#!%s", cfg.Shell)
+	_, err = fmt.Fprintln(out, bang)
+	if nil == err {
+		// export the environment unless orphan specified
+		if !par.OrphanEnviron {
+			for _, s := range env {
+				v := strings.SplitN(s, "=", 2)
+				if len(v) > 1 {
+					s = fmt.Sprintf("%s=%q", v[0], v[1])
+					_, err = fmt.Fprintln(out, "export", s)
+					if nil != err {
+						break
+					}
+				}
+			}
+		}
+		// copy the init file contents
+		scan := bufio.NewScanner(fh)
+		for (nil == err) && scan.Scan() {
+			s := scan.Text()
+			// ignore any redundant shebangs
+			if strings.TrimSpace(s) != bang {
+				_, err = fmt.Fprintln(out, s)
+			}
+		}
+		if nil == err {
+			err = scan.Err()
+		}
+	}
+
+	return errors.Trace(err)
+}
+
+func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (string, []string, error) {
 
 	var env *os.File
 	var err error
 
 	env, err = tempFile(p.App.PackageName + "-")
 	if err != nil {
-		return nil, nil, errors.Trace(err)
+		return "", nil, errors.Trace(err)
 	}
 
 	var cnt int
@@ -117,7 +182,7 @@ func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *E
 			pos += int64(cnt)
 			cnt, err = env.WriteAt(bytes, pos)
 			if err != nil {
-				return nil, nil, errors.Trace(err)
+				return "", nil, errors.Trace(err)
 			}
 
 			l.Context().
@@ -136,10 +201,10 @@ func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *E
 	}
 
 	if err = env.Close(); err != nil {
-		return nil, nil, errors.Trace(err)
+		return "", nil, errors.Trace(err)
 	}
 
-	return env, sel, nil
+	return env.Name(), sel, nil
 }
 
 func tempFile(prefix string) (*os.File, error) {

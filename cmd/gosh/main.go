@@ -20,7 +20,7 @@ func init() {
 			Version: "0.1.0",
 			Date:    "June 30, 2020",
 			Description: []string{
-				`initial commit`,
+				`+ Initial commit`,
 			},
 		},
 		{
@@ -28,13 +28,34 @@ func init() {
 			Version: "0.2.0",
 			Date:    "July 17, 2020",
 			Description: []string{
-				`move profile selection to flags, args represent command to run`,
+				`% Move profile selection to flags, args represent command to run`,
+			},
+		},
+		{
+			Package: "gosh",
+			Version: "0.3.0",
+			Date:    "February 23, 2021",
+			Description: []string{
+				`+ Add option to print generated init file instead of launching shell`,
+				`+ Append shell environment with GOSH_INIT, containing path to init file`,
+				`% Default to standard log handler if debug flag provided`,
+			},
+		},
+		{
+			Package: "gosh",
+			Version: "0.3.1",
+			Date:    "March 6, 2021",
+			Description: []string{
+				`- Move go.mod file to root package path github.com/ardnew/gosh`,
+				`% Rename changelog flag from -a to -V`,
 			},
 		},
 	}
 }
 
 func main() {
+
+	const debugLogHandler = log.LogStandard
 
 	appProp := config.AppProperties{
 		PackageName:    "gosh",
@@ -46,41 +67,62 @@ func main() {
 	}
 
 	appFlag := config.StartFlags{
+		Version: config.BoolFlag{
+			Flag:   "v",
+			Desc:   "Print application version.",
+			Preset: false,
+		},
+		ChangeLog: config.BoolFlag{
+			Flag:   "V",
+			Desc:   "Print the application changelog.",
+			Preset: false,
+		},
 		ConfigPath: config.StringFlag{
 			Flag:   "f",
-			Desc:   "path to the primary configuration file",
+			Desc:   "Use an alternate configuration file located at `path`. Profile paths are relative to this configuration file.",
 			Preset: appProp.ConfigPath(),
 		},
 		ShellCommand: config.StringFlag{
 			Flag:   "c",
-			Desc:   "run given command instead of starting new shell",
+			Desc:   "Run `command` with modified environment instead of starting a new shell.",
 			Preset: "",
 		},
-		Profiles: config.ProfileFlag{
-			Flag: "p",
-			Desc: "load profile with given name (must be defined in configuration file; specify multiple times for multiple profiles)",
+		LogHandler: config.StringFlag{
+			Flag:   "l",
+			Desc:   fmt.Sprintf("Specify the output log `format` [%s].", strings.Join(log.IdentNames(), ", ")),
+			Preset: log.LogDefaultIdent.String(),
+		},
+		DebugEnabled: config.BoolFlag{
+			Flag:   "g",
+			Desc:   fmt.Sprintf("Enable debug message logging (implies [-l %q] unless log format specified).", debugLogHandler.String()),
+			Preset: false,
 		},
 		// reversed logic for inherit because I suspect inheriting is the preferred
 		// or typical behavior. thus, user adds the flag for atypical behavior.
 		OrphanEnviron: config.BoolFlag{
 			Flag:   "o",
-			Desc:   "do NOT inherit the environment from current process, i.e., orphan",
+			Desc:   "Do NOT inherit (i.e., orphan) the environment from current process; or, if generating an init file, do NOT export the current environment.",
 			Preset: false,
 		},
-		LogHandler: config.StringFlag{
-			Flag:   "l",
-			Desc:   fmt.Sprintf("output log handler (%s)", strings.Join(log.IdentNames(), ", ")),
-			Preset: log.LogDefaultIdent.String(),
-		},
-		DebugEnabled: config.BoolFlag{
-			Flag:   "g",
-			Desc:   "enable debug message logging",
+		GenerateInit: config.BoolFlag{
+			Flag:   "s",
+			Desc:   "Print the generated init file instead of using it to start a new shell.",
 			Preset: false,
+		},
+		Profiles: config.ProfileFlag{
+			Flag: "p",
+			Desc: "Load files defined in configuration `profile`; may be specified multiple times.",
 		},
 	}
 
+	config.DebugLogHandler = debugLogHandler.String()
+
 	if param := appFlag.Parse(&appProp); !flag.Parsed() {
 		exit.ExitFlagsNotParsed.HaltAnnotated(nil, "flags not parsed")
+	} else if param.ChangeLog {
+		version.PrintChangeLog()
+	} else if param.Version {
+		fmt.Println(appProp.PackageName, "version", version.String())
 	} else if ui, err := cli.Start(param); err != nil {
 		exit.ExitCLINotStarted.HaltAnnotated(err, "CLI not started")
 	} else if err := ui.CreateShell(); err != nil {
