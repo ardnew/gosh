@@ -1,11 +1,23 @@
 #!/bin/bash
 
+# print commands as they are executed, and exit if it returns non-zero
+alias trap-trace='trap "set +exET ; trap - ERR RETURN" ERR RETURN ; set -exET'
+
 # ls
 alias     l="command ls"
 alias    ls="l -C -F --color=always"
 alias    ll="ls -l -s -h --group-directories-first"
 alias    la="ll -a"
 alias    lm="ll -A"
+
+# exa
+if type -P exa &> /dev/null; then
+	alias   e="command exa --icons --group-directories-first"
+	alias  ll="e --long --time=modified --group --binary --links --git --octal-permissions"
+	alias  lz="ll --sort=size"
+	alias  lt="ll --sort=newest"
+	alias  lr="ll --tree"
+fi
 
 # grep
 alias    g="command grep"
@@ -15,6 +27,10 @@ alias grep="g --color=always --perl-regexp -I"
 if type -P bat &> /dev/null; then
 	alias cat='bat --paging=never --plain'
 fi
+
+# show whitespace symbols
+alias white='tr " " "." | sed -E "s/\t/ -> /g"' # space='.', tab=' -> '
+alias whiteln='white | sed -E "s/$/$/"'         # eol='$'
 
 # base conversions
 alias d2h="perl -e 'printf qq|%X$/|, int(shift)'"
@@ -67,12 +83,15 @@ if type -p tput &> /dev/null; then
 	alias lastcol='echo $(( $( tput cols ) - 1 ))'
 fi
 
+# Xresources
+alias reload-xresources='xrdb -merge ${HOME}/.Xresources'
+
 # diff
 alias diff='diff --report-identical-files --suppress-blank-empty --new-file --no-ignore-file-name-case --minimal --speed-large-files --color=always'
-alias diff.u='diff --unified'
-alias diff.c='diff --show-c-function'
+alias diff.unified='diff --unified'
+alias diff.cfunc='diff --show-c-function'
 if type -p tput &> /dev/null; then
-	alias diff.col='diff --side-by-side --width=$( lastcol )'
+	alias diff.split='diff --side-by-side --width=$( lastcol )'
 fi
 
 # BeyondCompare
@@ -80,10 +99,13 @@ if type -p bcompare &> /dev/null; then
 	alias bdiff='bcompare'
 fi
 
+# feh
+alias feh.thumbs='feh -t -E 128 -y 128 -W 1024'
+
 if type -p mark-my-words &> /dev/null; then
 	alias md='mark-my-words'
 fi
 
 # utility
-alias reload-groups='exec sudo su -l $USER'
+alias groups-reload='exec sudo su -l $USER'
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'

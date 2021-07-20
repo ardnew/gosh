@@ -13,11 +13,14 @@ esac
 
 case "${host_kind}" in
 	${host_linux})
-		root_go="/usr/local/src/go/dev"
-		path_go="/usr/local/src/go"
+		root_go="/usr/local/go/dev"
+		path_go="/usr/local/go"
 		path_goshfun="${HOME}/.local/bin/gosh"
 		;;
 	${host_darwin})
+		root_go="/usr/local/go/dev"
+		path_go="/usr/local/go"
+		path_goshfun="${HOME}/.local/bin/gosh"
 		;;
 	${host_cygwin})
 		;;
@@ -42,5 +45,4 @@ fi
 
 [[ -d "${path_goshfun}" ]] && PATH="${path_goshfun}:${PATH}"
 
-export GOROOT GOPATH PATH GOOS GOARCH
-
+export GOOS GOARCH GOROOT GOPATH PATH

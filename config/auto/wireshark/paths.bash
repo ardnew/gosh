@@ -2,7 +2,7 @@
 
 case "${host_kind}" in
 	${host_linux})
-		path_poetry="${HOME}/.poetry"
+		wireshark_path="${HOME}/.local/bin/wireshark"
 		;;
 	${host_darwin})
 		;;
@@ -14,8 +14,7 @@ case "${host_kind}" in
 		;;
 esac
 
-[[ -d "${path_poetry}" ]] &&
-	PATH="${path_poetry}/bin:${PATH}"
+[[ -d "${wireshark_path}" ]] &&
+	PATH="${wireshark_path}:${PATH}"
 
 export PATH
-

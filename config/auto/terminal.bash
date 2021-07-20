@@ -5,11 +5,19 @@ if e=$( type -P nvim ) || e=$( type -P vim ) || e=$( type -P vi ); then
 	EDITOR=$( readlink -f "${e}" )
 fi
 
-if [[ -x ${EDITOR} ]]; then
+[[ -x ${EDITOR} ]] &&
 	export EDITOR VISUAL=${EDITOR}
-fi
+
+export EMAIL="andrew@ardnew.com"
 
 export PAGER='less -RF'
+export MANPAGER="${PAGER} -X"
+
+# use nvimpager as man pager, if it is installed
+mp=$( type -P nvimpager ) &&
+	export MANPAGER=${mp}
+
+test is-host-darwin || export LANG='en_US.utf8'
 
 export HISTCONTROL=$HISTCONTROL${HISTCONTROL+,}ignoredups
 export HISTSIZE=4096
@@ -17,11 +25,15 @@ export HISTFILESIZE=8192
 
 shopt -s histappend
 shopt -s checkwinsize
-shopt -s globstar
+
+test is-host-darwin || shopt -s globstar
 
 export prompt_color=1
 export umask_default=0022
 
-[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+export BASH_SILENCE_DEPRECATION_WARNING=1
+
+lp=$( type -P lesspipe ) &&
+	eval "$( SHELL=/bin/sh "${lp}" )"
 
 umask ${umask_default}

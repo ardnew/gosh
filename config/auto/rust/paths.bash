@@ -6,6 +6,8 @@ case "${host_kind}" in
 		path_cargo="/usr/lib/cargo"
 		;;
 	$host_darwin)
+		path_rustup="/usr/local/lib/rustup"
+		path_cargo="/usr/local/lib/cargo"
 		;;
 	$host_cygwin)
 		;;

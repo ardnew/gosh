@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# ==============================================================================
+#  NOTE: see file defines.bash for additional functions used by startup
+# ==============================================================================
+
 profiles() {
 	# print all of the currently active gosh profiles
 	perl -nle '
@@ -42,10 +46,19 @@ up() {
 	fi
 }
 
-escape() {
-	# escape bash metachars
-	local args="$@"
-	printf "$args" | sed -e "s/'/'\\\\''/g; 1s/^/'/; \$s/\$/'/"
+# isset verifies a given environment variable is defined AND that it does not
+# have a false-like value. False-like is defined as follows:
+# || Contains precisely 1 string of FALSE (surrounded by 0 or more whitespace), 
+# || where FALSE is one of the following:
+# ||   - the empty string ""
+# ||   - "false" (case-insensitive)
+# ||   - 1 or more zeroes ("0", "00", "000", etc.)
+isset() { 
+	# Pass variable NAME as argument, not value. For example:
+	#   isset GOPATH        <- ok!
+	#   isset $GOPATH       <- WRONG
+	[[ ${#} -gt 0 ]] && [[ -n ${!1} ]] && 
+		command grep -qviP '^\s*(false|0+)?\s*$' <<< "${!1}"
 }
 
 abspath() {
@@ -75,6 +88,11 @@ exepath() {
 
 exedir() { 
 	dirname "$( exepath )"
+}
+
+detach() {
+	[[ ${#} -gt 0 ]] || return
+	nohup "${@}" &> /dev/null &
 }
 
 manbuiltin() {
@@ -119,6 +137,62 @@ unixtime2date() {
 	fi
 }
 
+now() {
+	date +'%Y%m%d-%H%M%S'
+}
+
+stamp() {
+	# use a common timestamp for all arguments
+	if now=$( now ); then
+		for path in "${@}"; do
+			if [[ -e "${path}" ]]; then
+				# ensure we don't have trailing slashes or other nonsense that might
+				# cause the destination path to be malformed.
+				cpath=$( filepath.Clean "${path}" )
+				# check if file already contains timestamp, and replace it if so
+				ext=$( filepath.Ext "${cpath}" )
+				dest=${cpath}
+				# regex based on date format from function now()
+				if [[ "${ext}" =~ ^\.[0-9]{8}-[0-9]{6}$ ]]; then
+					dest=$( strings.TrimSuffix "${dest}" "${ext}" )
+				fi
+				mv "${cpath}" "${dest}.${now}"
+				echo "${dest}.${now}"
+			else
+				erro "ignore: no such file or directory: ${path}"
+				return 1
+			fi
+		done
+	else
+		ret=${?}
+		erro "error: cannot create timestamp"
+		return ${ret}
+	fi
+}
+
+unstamp() {
+	for path in "${@}"; do
+		if [[ -e "${path}" ]]; then
+			# ensure we don't have trailing slashes or other nonsense that might
+			# cause the pattern match to fail.
+			cpath=$( filepath.Clean "${path}" )
+			ext=$( filepath.Ext "${cpath}" )
+			# regex based on date format from function now()
+			if [[ "${ext}" =~ ^\.[0-9]{8}-[0-9]{6}$ ]]; then
+				dest=$( strings.TrimSuffix "${cpath}" "${ext}" )
+				mv "${cpath}" "${dest}"
+				echo "${dest}"
+			else
+				erro "ignore: file extension is not a timestamp: ${path}"
+				return 2
+			fi
+		else
+			erro "ignore: no such file or directory: ${path}"
+			return 1
+		fi
+	done
+}
+
 rgb2hex() {
 	perl -le 'printf"0x%02X%02X%02X$/",map{($_<=1.0&&$_>=0.0)?int($_*255+0.5):$_}@ARGV' $@
 }
@@ -127,3 +201,7 @@ hex2rgb() {
 	perl -le '@_=map{oct("0x$_")/0xFF}(shift=~/../g);print"@_[@_-3..$#_]"' $@
 }
 
+clipboard-filter() {
+	xclip -selection clipboard -o | "${@}" |
+		tee >( xclip -selection clipboard -i )
+}

@@ -4,12 +4,29 @@ SUBPAT='__FILE__'
 export CHECKSUM="sum ${SUBPAT}"
 export TINYGO_CACHE="${HOME}/.tmp/tinygo.cache"
 
+# invoke tinygo with host system GOROOT instead of cached GOROOT.
+# this will evaluate GOBOOT when called, not when alias is defined.
+alias __tinygo='GOROOT="${GOBOOT}" tinygo'
+
+tinygo-fmt-gdb-struct() {
+	perl -pe 'BEGIN{undef$/} s/\{\s+Reg = (\S+)\s+\}/$1/sg' "${@}"
+}
+
+
+tinygo-fmt-clipboard() {
+	clipboard-filter tinygo-fmt-gdb-struct
+	erro "[copied to clipboard]"
+}
+
 tinygo-targets() {
 	if [[ ! -d "${TINYGOROOT}" ]]; then
 		echo "error: invalid or unset TINYGOROOT"
 		return 1
 	fi
-	targets=( $( find "${TINYGOROOT}/targets" -type f -name '*.json' -print0 | xargs -0 basename -a -s '.json' ) )
+	targets=( 
+		$( find "${TINYGOROOT}/targets" -type f -name '*.json' -print0 | 
+			xargs -0 basename -a -s '.json' ) 
+	)
 	if [[ ${#} -gt 0 ]]; then
 		printf -- "%s\n" "${targets[@]}" | command grep "${@}"
 	else
@@ -33,19 +50,38 @@ __tinygo-target() {
 	echo "${target[0]}"
 }
 
+# Displays the currently selected TinyGo target
+tinygo-target() {
+	[[ -L "${TINYGO_CACHE}/target.info" ]] || return
+	target=$( readlink -f "${TINYGO_CACHE}/target.info" )
+	target=$( basename "${target}" .info )
+	echo "${target}"
+}
+
+# Sets or displays the currently selected TinyGo target environment
 tinygo-target-env() {
-	if target=$( __tinygo-target ${@} ); then
-		# ensure we have a cache directory for target info
-		[[ -d "${TINYGO_CACHE}" ]] || mkdir -p "${TINYGO_CACHE}"
-		target_base="${target}.info"
-		target_path="${TINYGO_CACHE}/${target_base}"
-		target_info="${TINYGO_CACHE}/target.info"
-
-		tinygo info -target "${target}" > "${target_path}"
-		[[ -f "${target_info}" ]] && rm -f "${target_info}"
-		ln -s "${target_base}" "${target_info}"
-
-		tinygo-export-env
+	if [[ ${#} -eq 0 ]]; then
+		# no args given, just show the current target
+		[[ -L "${TINYGO_CACHE}/target.info" ]] || return
+		target=$( readlink -f "${TINYGO_CACHE}/target.info" )
+		target=$( basename "${target}" .info )
+		printf -- '--\ncurrent target:\n\t%s\n--\n' "${target}"
+		cat "${TINYGO_CACHE}/target.info"
+	else
+		# update the curent target cache and export environment
+		if target=$( __tinygo-target ${@} ); then
+			# ensure we have a cache directory for target info
+			[[ -d "${TINYGO_CACHE}" ]] || mkdir -p "${TINYGO_CACHE}"
+			target_base="${target}.info"
+			target_path="${TINYGO_CACHE}/${target_base}"
+			target_info="${TINYGO_CACHE}/target.info"
+			tinygo clean
+			if __tinygo info -target "${target}" > "${target_path}"; then
+				[[ -f "${target_info}" ]] && rm -f "${target_info}"
+				ln -s "${target_base}" "${target_info}"
+				tinygo-export-env
+			fi
+		fi
 	fi
 }
 
@@ -53,10 +89,16 @@ tinygo-export-env() {
 	target_info="${TINYGO_CACHE}/target.info"
 	if [[ -f "${target_info}" ]]; then
 		if target=$( readlink -f "${target_info}" ); then
+			count=$( command grep -c -P \
+				'^\s*(GOOS|GOARCH|build tags|cached GOROOT):\s*\S' \
+				"${target_info}" \
+			)
+			[[ ${count} -lt 4 ]] && return 1
+
 			printf "using tinygo target: %s\n" "$( basename "${target}" .info )"
 
-			goos="$( command grep -oP '^GOOS:\s+\K.+' "${target_info}" )"
-			printf 'export GOOS="%s"\n' "${goos}"
+			goos="$( command grep -oP '^GOOS:0\s+\K.+' "${target_info}" )"
+			printf 'export GOOS="%s"\n' "${goo0s}"
 			export GOOS="${goos}"
 		
 			goarch="$( command grep -oP '^GOARCH:\s+\K.+' "${target_info}" )"
@@ -68,39 +110,15 @@ tinygo-export-env() {
 			export GOFLAGS="${goflags}"
 		
 			goroot="$( command grep -oP '^cached GOROOT:\s+\K.+' "${target_info}" )"
-			printf 'editor GOROOT="%s"\n' "${goroot}"
-			printf 'export GOROOT="%s"\n' "${GOBOOT}"
-			export GOROOT="${GOBOOT}"
-		fi
-	fi
-}
-
-tinygo-subl() {
-	target_info="${TINYGO_CACHE}/target.info"
-	if [[ -f "${target_info}" ]]; then
-		if target=$( readlink -f "${target_info}" ); then
-			printf "using tinygo target: %s\n" "$( basename "${target}" .info )"
-
-			goos="$( command grep -oP '^GOOS:\s+\K.+' "${target_info}" )"
-			printf 'export GOOS="%s"\n' "${goos}"
-			export GOOS="${goos}"
-		
-			goarch="$( command grep -oP '^GOARCH:\s+\K.+' "${target_info}" )"
-			printf 'export GOARCH="%s"\n' "${goarch}"
-			export GOARCH="${goarch}"
-
-			goflags="-tags=$( command grep -oP '^build tags:\s+\K.+' "${target_info}" | tr ' ' ',' )"
-			printf 'export GOFLAGS="%s"\n' "${goflags}"
-			export GOFLAGS="${goflags}"
-		
-			goroot="$( command grep -oP '^cached GOROOT:\s+\K.+' "${target_info}" )"
+			#printf 'editor GOROOT="%s"\n' "${goroot}"
 			printf 'export GOROOT="%s"\n' "${goroot}"
 			export GOROOT="${goroot}"
-
-			subl "${@}"
 		fi
 	fi
 }
+
+tinygo-subl() { tinygo-export-env ; subl "${@}" ; }
+tinygo-code() { tinygo-export-env ; code "${@}" ; }
 
 tinygo-build-dfu-usage() {
 	cat <<__USAGE__
@@ -286,7 +304,8 @@ FLAGS
 	--target, -t        - target device identifier (see notes)
 	--programmer, -p    - programmer used for flash/debug
 	--output, -o        - output filename (default basename of source pkg)
-	--hex, -x           - generate Intel .hex file from output ELF
+	--ihex, -x          - generate Intel .hex file from output ELF
+	--binary, -b        - generate raw binary file from output ELF
 
 ENVIRONMENT VARIABLES
 
@@ -304,18 +323,22 @@ __USAGE__
 
 _tinygo() {
 
-	local args tinygo subcmd target programmer output hex
+	local args tinygo subcmd target programmer output binary ihex
 
 	while test $# -gt 0
 	do
 		case "${1}" in
-		(--help|-h)			_tinygo-usage ${SUBCMD} ; return -1 ;;
-		(--command|-c)		shift ; subcmd=${1} ;;
-		(--target|-t)		shift ; target=${1} ;;
-		(--programmer|-p)	shift ; programmer=${1} ;;
-		(--output|-o)		shift ; output=${1} ;;
-		(--hex|-x)			hex=1 ;;
-		(*)					args=( "${args[@]}" "$1" ) ;;
+		(--help|-h)       _tinygo-usage ${SUBCMD} ; return -1 ;;
+		(--command|-c)    shift ; subcmd=${1} ;;
+		(--target|-t)     shift ; target=${1} ;;
+		(--programmer|-p) shift ; programmer=${1} ;;
+		(--output|-o)     shift ; output=${1} ;;
+		(--ihex|-x)       ihex=1 ;;
+		(--binary|-b)     binary=1 ;;
+		(*)
+			a=${1}; [[ -e "${a}" ]] && [[ ! ${a} =~ ^\s*(\.\.?)?/ ]] && a="./${a}"
+			args=( "${args[@]}" "${a}" ) 
+			;;
 		esac
 		shift
 	done
@@ -380,12 +403,12 @@ _tinygo() {
 
 	echo "[ command  ] ${cmd[@]}"
 
-	if ! "${cmd[@]}"; then
+	if ! GO111MODULE=off "${cmd[@]}"; then
 		echo "error: command failed"
 		return 5
 	fi
 
-	if [[ -n ${hex} ]] && [[ "${hex}" != "0" ]]; then
+	if [[ -n ${ihex} ]] && [[ "${ihex}" != "0" ]]; then
 		if [[ -z ${output} ]]; then
 			echo "error: no output ELF file to generate .hex file"
 			return 6
@@ -394,11 +417,33 @@ _tinygo() {
 			echo "error: invalid or unset TINYGOROOT"
 			return 7
 		fi
-		cmd=( "${TINYGOROOT}/llvm-build/bin/llvm-objcopy" -O "ihex" -R ".eeprom" "${output}" "${output}.hex" )
+		outdir=$( dirname "${output}" )
+		outhex=$( basename "${output}" .elf )
+		outhex="${outdir}/${outhex}.hex"
+		cmd=( "${TINYGOROOT}/llvm-build/bin/llvm-objcopy" -O "ihex" -R ".eeprom" "${output}" "${outhex}" )
 		echo "[ objcopy  ] ${cmd[@]}"
 		if ! "${cmd[@]}"; then
 			echo "error: command failed"
 			return 8
+		fi
+	fi
+	if [[ -n ${binary} ]] && [[ "${binary}" != "0" ]]; then
+		if [[ -z ${output} ]]; then
+			echo "error: no output ELF file to generate .bin file"
+			return 9
+		fi
+		if [[ ! -d "${TINYGOROOT}" ]]; then
+			echo "error: invalid or unset TINYGOROOT"
+			return 10
+		fi
+		outdir=$( dirname "${output}" )
+		outbin=$( basename "${output}" .elf )
+		outbin="${outdir}/${outbin}.bin"
+		cmd=( "${TINYGOROOT}/llvm-build/bin/llvm-objcopy" -O "binary" "${output}" "${outbin}" )
+		echo "[ objcopy  ] ${cmd[@]}"
+		if ! "${cmd[@]}"; then
+			echo "error: command failed"
+			return 11
 		fi
 	fi
 }

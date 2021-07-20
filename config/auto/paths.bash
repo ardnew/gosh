@@ -4,6 +4,7 @@ case "${host_kind}" in
 	$host_linux)
 		;;
 	$host_darwin)
+		path_gnubin="/opt/local/libexec/gnubin"
 		;;
 	$host_cygwin)
 		;;
@@ -13,7 +14,20 @@ case "${host_kind}" in
 		;;
 esac
 
-PATH="${HOME}/.local/bin:/usr/local/bin:${PATH}"
-LD_LIBRARY_PATH="${HOME}/.local/lib:/usr/local/lib:${LD_LIBRARY_PATH}"
+auto_aliases="${HOME}/.config/gosh/auto/aliases.bash"
 
-export PATH LD_LIBRARY_PATH
+[[ -n ${path_gnubin} ]] && 
+	PATH=$( prepath PATH "${path_gnubin}" )
+PATH=$( prepath PATH '/usr/local/bin' "${HOME}/.local/bin" )
+LD_LIBRARY_PATH=$( prepath LD_LIBRARY_PATH "${HOME}/.local/lib" "/usr/local/lib" )
+MANPATH=$( prepath MANPATH '/usr/local/share/man' '/usr/share/man' )
+
+INPUTRC="${HOME}/.config/gosh/auto/inputrc" 
+
+if [[ -f "${HOME}/.inputrc" ]] && [[ ! -L "${HOME}/.inputrc" ]] ||
+		[[ "${INPUTRC}" != $( readlink -f "${HOME}/.inputrc" ) ]]; then
+	rm -f "${HOME}/.inputrc"
+	ln -sf "${INPUTRC}" "${HOME}/.inputrc"
+fi
+
+export PATH LD_LIBRARY_PATH INPUTRC MANPATH

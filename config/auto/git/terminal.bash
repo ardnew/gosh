@@ -1,6 +1,8 @@
 #!/bin/bash
 
-GITHUB_API_TOKEN='xxx'
+GITHUB_TOKEN='ghp_xxx'
+GIT_EDITOR='nvim'
+#GIT_PAGER='glow'
 
-export GITHUB_API_TOKEN
+export GITHUB_TOKEN GIT_EDITOR
 

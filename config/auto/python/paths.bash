@@ -2,9 +2,9 @@
 
 case "${host_kind}" in
 	${host_linux})
-		path_poetry="${HOME}/.poetry"
 		;;
 	${host_darwin})
+		path_python="${HOME}/Library/Python/3.9"
 		;;
 	${host_cygwin})
 		;;
@@ -14,8 +14,8 @@ case "${host_kind}" in
 		;;
 esac
 
-[[ -d "${path_poetry}" ]] &&
-	PATH="${path_poetry}/bin:${PATH}"
+[[ -d "${path_python}" ]] &&
+	PATH="${path_python}/bin:${PATH}"
 
 export PATH
 

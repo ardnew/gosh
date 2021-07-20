@@ -14,6 +14,6 @@ case "${host_kind}" in
 		;;
 esac
 
-[[ -d "${path_gitconfig}" ]] && 
+[[ -f "${path_gitconfig}" ]] && 
 	export GIT_CONFIG="${path_gitconfig}"
 

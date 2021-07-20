@@ -4,13 +4,16 @@ args: [ --rcfile, __GOSH_INIT__, __GOSH_ARGS__ ]
 cmdflag: -c
 env:
   - auto:
+    - defines.bash
     - host.bash
     - paths.bash
     - git/paths.bash
     - go/paths.bash
     - perl/paths.bash
+    - python/paths.bash
     - poetry/paths.bash
     - restic/paths.bash
+    - ripgrep/paths.bash
     - rust/paths.bash
     - java/paths.bash
     - openocd/paths.bash
@@ -20,18 +23,30 @@ env:
     - duc/paths.bash
     - mutt/paths.bash
     - pgp/paths.bash
+    - trace32/paths.bash
+    - wireshark/paths.bash
+    - sigrok/paths.bash
     - colors.bash
     - functions.bash
     - openocd/functions.bash
     - hub/functions.bash
     - duc/functions.bash
     - restic/functions.bash
+    - trace32/functions.bash
+    - pio/functions.bash
+    - ripgrep/functions.bash
     - aliases.bash
     - hub/aliases.bash
+    - bat/aliases.bash
+    - python/aliases.bash
+    - go/aliases.bash
+    - ripgrep/aliases.bash
     - prompt.bash
     - git/prompt.bash
     - completion.bash
     - arduino-cli/completion.bash
+    - mbed/completion.bash
+    - fd/completion.bash
     - gh/completion.bash
     - git/completion.bash
     - hub/completion.bash
@@ -40,15 +55,20 @@ env:
     - go/golangci-lint/completion.bash
     - poetry/completion.bash
     - restic/completion.bash
+    - ripgrep/completion.bash
     - rust/completion.bash
     - task/completion.bash
+    - tmux/completion.bash
     - terminal.bash
     - gh/terminal.bash
     - git/terminal.bash
+    - pgp/terminal.bash
   - arduino:
     - arduino-cli.bash
   - segger:
-    - segger-jlink.bash
+    - functions.bash
+  - openocd:
+    - functions.bash
   - tinygo:
     - paths.bash
     - functions.bash

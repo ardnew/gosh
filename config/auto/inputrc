@@ -1,0 +1,27 @@
+# GNU GDB keyboard hooks
+$if Gdb
+  "\e[20~": "continue\n"
+  "\e[20;5~": "finish\n"
+  "\e[19~": "next\n"
+  "\e[19;5~": "nexti\n"
+  "\e[18~": "step\n"
+  "\e[18;5~": "stepi\n"
+  "\e[17~": "# <F6> [TBD]\n"
+  "\e[15~": "break\ninfo breakpoints\n"
+  "\e[5;3~": "dashboard source scroll -10\n"
+  "\e[6;3~": "dashboard source scroll +10\n"
+  "\e[1;3A~": "dashboard source scroll -1\n"
+  "\e[1;3B~": "dashboard source scroll +1\n"
+$endif
+
+
+# GNU Bash keyboard hooks
+$if Bash
+  # <Ctrl-x r> Reload/rehash this configuration file
+  "\C-xr": re-read-init-file
+  # <Ctrl-x q> Enquote ('single') the current or previous word
+  "\C-xq": "\eb'\ef'"
+  # <Ctrl-x w> Enquote ("double") the current or previous word
+  "\C-xw": "\eb\"\ef\""
+$endif
+

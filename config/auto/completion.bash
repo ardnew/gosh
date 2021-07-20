@@ -16,7 +16,7 @@ fi
 #	"command grep -oE '^[a-zA-Z0-9_.-]+:([^=]|$)' Makefile | " \
 #	"sed 's/[^a-zA-Z0-9_.-]*$//')" make
 
-function _mkcache() {
+_mkcache() {
     local _file="$1"
     # add "-r" to omit defaults (60+ rules)
     ${MAKE:-make} ${_file:+-f "$_file"} -qp 2>/dev/null |
@@ -48,11 +48,33 @@ function _mkcache() {
     }' > ".${_file:-Makefile}.targets"
 }
 
-function _bc_make() {
+_bc_make() {
     local ctok=${COMP_WORDS[COMP_CWORD]}   # curr token
     local ptok=${COMP_WORDS[COMP_CWORD-1]} # prev token
     local -a mkrule maybe
-    local try rr lhs rhs rdir pat makefile=Makefile
+    local try rr lhs rhs rdir pat
+
+		# give priority to any Makefile path in env
+		local makefile=${MAKEFILE}
+		# fallback on some default Makefile file names
+		[[ -f "${makefile}" ]] || makefile='Makefile'
+		[[ -f "${makefile}" ]] || makefile='makefile'
+		if [[ ! -f "${makefile}" ]]; then
+			# check if -f flag exists in current command line
+			for (( i = 0; i < ${#COMP_WORDS[@]}-1; ++i )); do
+				if [[ '-f' == ${COMP_WORDS[${i}]} ]]; then
+					# found -f flag. use its argument as Makefile
+					makefile="${COMP_WORDS[$(( i+1 ))]}"
+					break
+				fi
+			done
+		fi
+
+		# bail out unless we have found a Makefile
+		if [[ ! -f "${makefile}" ]]; then
+			COMPREPLY=()
+			return
+		fi
 
     ## check we're not doing any make options 
     [[ ${ctok:0:1} != "-" && ! $ptok =~ ^-[fCIjloW] ]] && {
