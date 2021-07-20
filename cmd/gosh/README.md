@@ -66,8 +66,9 @@ env:
     - aliases.bash
     - prompt.bash
     - completion.bash
-  - arduino:                        #   (3.)  /path/to/config.yml/arduino
-    - paths.bash                    #   (4.)  /path/to/config.yml/arduino/paths.bash
+  - tinygo:                         #   (3.)  /path/to/config.yml/tinygo
+    - paths.bash                    #   (4.)  /path/to/config.yml/tinygo/paths.bash
+    - functions.bash                #   (4.)  /path/to/config.yml/tinygo/functions.bash
   - segger:                         #   (3.)  /path/to/config.yml/segger
     - paths.bash                    #   (4.)  /path/to/config.yml/segger/paths.bash
 
