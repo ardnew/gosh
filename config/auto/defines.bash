@@ -1,10 +1,28 @@
 #!/bin/bash
 
+# define is syntactic sugar for assigning HEREDOC content to a variable. 
+# Works with quoted content (e.g., define foo <<'EOF' ...), as well as scripts
+# that set -e (since read returns non-zero on success).
+define() { IFS='\n' read -r -d '' ${1} || true; }
+
+# escape prints the given arguments in a quoted format that can be reused as
+# input to other bash commands.
 escape() {
-	# escape bash metachars
-	local args="$@"
-	printf "$args" | sed -e "s/'/'\\\\''/g; 1s/^/'/; \$s/\$/'/"
-}
+	# instead of printf %q, you can also use parameter expansion: ${foo@Q}
+	if [[ $# -gt 0 ]]; then
+		if [[ -f "${1}" ]] && [[ -r "${1}" ]]; then
+			for v in "${@}"; do
+				[[ -e "${v}" ]] && printf -- '%q\n' "$( cat "${v}" )"
+			done
+		else
+			for v in "${@}"; do
+				printf -- '%q\n' "${v}"
+			done
+		fi
+	else
+		printf -- '%q\n' "$( cat - )"
+	fi
+} 
 
 joinstr() { 
 	local d=${1-} f=${2-}
@@ -13,8 +31,12 @@ joinstr() {
 	fi
 }
 
+# uniqstr prints each unique string in the given input. Input may be provided
+# as arguments (delimited per argument, not per word in each argument), path to
+# a readable file, or via stdin (e.g., pipe, file redirect, etc.). In the latter
+# two cases (file and stdin), strings are delimited per line.
 uniqstr() {
-	local pl='
+	define uniq <<'PL'
 use strict;
 use warnings;
 
@@ -23,15 +45,15 @@ END { print for sort { $s{$a} <=> $s{$b} } keys %s }
 while (<>) {
 	s/[\r\n]+$//sg; $s{$_} = $. unless exists $s{$_}
 }
-'
+PL
 	if [[ $# -gt 0 ]]; then
-		if [[ -f "${1}" ]]; then
-			perl -le "${pl}" "${@}"
+		if [[ -f "${1}" ]] && [[ -r "${1}" ]]; then
+			perl -le "${uniq}" "${@}"
 		else
-			perl -le "${pl}" <<< "$( joinstr $'\n' "${@}" )"
+			perl -le "${uniq}" <<< "$( joinstr $'\n' "${@}" )"
 		fi
 	else
-		perl -le "${pl}"
+		perl -le "${uniq}"
 	fi
 }
 
@@ -83,13 +105,26 @@ prepath() {
 }
 
 # goshconfig prints the default path to the gosh configuration file. this path
-# is determined by parsing the output of command "gosh --help". If the -d flag
+# is determined by parsing the output of help command "gosh -h". If the -d flag
 # is given, prints only the directory path containing the configuration file.
 goshconfig() {
-	path=$( gosh --help 2>&1 | command grep -A 1 -- '-f path' | tail -n 1 | 
-		command grep -oP 'default "\K[^"]+' )
+	# locate the path by parsing the default value for the "-f" flag identified at
+	# the end of the flag description in the output of "gosh -h". We don't know
+	# how many lines or the exact format this flag will have in the output, so we
+	# have to identify and store lines in a buffer before trying to match.
+	define parse <<'PL'
+use strict;
+use warnings;
+my ($k, $t);
+print join(" ",	grep { 
+		$k = defined $t && $k != /^${t}-\S/ || (($t) = /^(\s+)-f\s+\S+/g) 
+	} <> ) =~ 
+		/[\(\[]?\s*default:?\s*["'\'']?(.*?)(?=["'\'']?\s*[\)\]]?\s*$)/ig
+PL
+	path=$( gosh --help 2>&1 | perl -le "${parse}" )
+
 	if [[ ${#} -gt 0 ]] && [[ "${1}" == '-d' ]]; then
-		dirname "${path}"
+		echo "${path%/*}" 
 	else
 		echo "${path}"
 	fi

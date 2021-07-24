@@ -1,7 +1,22 @@
 #!/bin/bash
 
-# source the completion scripts pre-installed on the system
-global_bash_completion="/usr/share/bash-completion/bash_completion"
+case "${host_kind}" in
+  $host_linux)
+	global_bash_completion="/usr/local/src/bash-completion/bash_completion"
+	;;
+  $host_darwin)
+	global_bash_completion="/usr/local/src/bash-completion/bash_completion"
+	;;
+  $host_cygwin)
+	;;
+  $host_mswsl)
+	;;
+  *)
+	# source the completion scripts pre-installed on the system
+	global_bash_completion="/usr/share/bash-completion/bash_completion"
+	;;
+esac
+
 system_bash_completion="/etc/bash_completion"
 if ! shopt -oq posix; then
 	if [ -f "${global_bash_completion}" ]; then

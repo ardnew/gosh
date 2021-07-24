@@ -6,7 +6,7 @@ _task_completion()
   COMP_WORDBREAKS=${COMP_WORDBREAKS//:}
 
   scripts=$(task -l -s)
-  options=$(task -h 2>&1 | perl -ne 's/^\s+((-.), )?(--.+?\b).*$/$2 $3 /s && print')
+	options=$(task -h 2>&1 | command grep -oP '^\s+(-\w, )?\K--\S+')
 
   curr="${COMP_WORDS[COMP_CWORD]}"
 

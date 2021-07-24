@@ -14,7 +14,7 @@ case "${host_kind}" in
 		;;
 esac
 
-auto_aliases="${HOME}/.config/gosh/auto/aliases.bash"
+auto_aliases="$( goshconfig -d )/auto/aliases.bash"
 
 [[ -n ${path_gnubin} ]] && 
 	PATH=$( prepath PATH "${path_gnubin}" )
@@ -22,7 +22,7 @@ PATH=$( prepath PATH '/usr/local/bin' "${HOME}/.local/bin" )
 LD_LIBRARY_PATH=$( prepath LD_LIBRARY_PATH "${HOME}/.local/lib" "/usr/local/lib" )
 MANPATH=$( prepath MANPATH '/usr/local/share/man' '/usr/share/man' )
 
-INPUTRC="${HOME}/.config/gosh/auto/inputrc" 
+INPUTRC="$( goshconfig -d )/auto/inputrc" 
 
 if [[ -f "${HOME}/.inputrc" ]] && [[ ! -L "${HOME}/.inputrc" ]] ||
 		[[ "${INPUTRC}" != $( readlink -f "${HOME}/.inputrc" ) ]]; then
