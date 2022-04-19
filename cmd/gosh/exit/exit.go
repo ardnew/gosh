@@ -12,10 +12,10 @@ type Code int
 
 // Constant enumerated values of type Code.
 const (
-	ExitOK              Code = 0
-	ExitFlagsNotParsed  Code = 1
-	ExitCLINotStarted   Code = 2
-	ExitShellNotCreated Code = 3
+	OK              Code = 0
+	FlagsNotParsed  Code = 1
+	CLINotStarted   Code = 2
+	ShellNotCreated Code = 3
 )
 
 // Halt terminates program execution with the receiver's exit code.
@@ -28,7 +28,7 @@ func (c Code) Halt() {
 func (c Code) HaltAnnotated(err error, note string) {
 	haltMessage := ""
 	switch c {
-	case ExitOK:
+	case OK:
 		if "" != note {
 			haltMessage = fmt.Sprintf("halt(%d): %s", c, note)
 		}

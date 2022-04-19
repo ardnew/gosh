@@ -50,6 +50,19 @@ func init() {
 				`% Rename changelog flag from -a to -V`,
 			},
 		},
+		{
+			Package: "gosh",
+			Version: "0.4.0",
+			Date:    "April 19, 2022",
+			Description: []string{
+				`% Major refactor of configuration YAML format:`,
+				`|  + Per-profile initial working directory and env definitions`,
+				`|  + (Placeholder stub for profile inheritance)`,
+				`|  + Support for multiple shell definitions`,
+				`+ Override which shell is executed with flag -e`,
+				`% Proper handling of args in non-interactive shells with flag -c`,
+			},
+		},
 	}
 }
 
@@ -61,7 +74,8 @@ func main() {
 		PackageName:    "gosh",
 		EnvConfigName:  "GOSH_CONFIG",
 		FileConfigName: "config.yml",
-		ReqEnvName:     "auto",
+		ReqShellName:   "auto",
+		ReqProfileName: "auto",
 		PermConfigFile: 0o600,
 		PermConfigDir:  0o700,
 	}
@@ -87,6 +101,11 @@ func main() {
 			Desc:   "Run `command` with modified environment instead of starting a new shell.",
 			Preset: "",
 		},
+		Shell: config.StringFlag{
+			Flag:   "e",
+			Desc:   "Use executable and paramter templates named `shell` in configuration file.",
+			Preset: appProp.ReqShellName,
+		},
 		LogHandler: config.StringFlag{
 			Flag:   "l",
 			Desc:   fmt.Sprintf("Specify the output log `format` [%s].", strings.Join(log.IdentNames(), ", ")),
@@ -100,12 +119,12 @@ func main() {
 		// reversed logic for inherit because I suspect inheriting is the preferred
 		// or typical behavior. thus, user adds the flag for atypical behavior.
 		OrphanEnviron: config.BoolFlag{
-			Flag:   "o",
-			Desc:   "Do NOT inherit (i.e., orphan) the environment from current process; or, if generating an init file, do NOT export the current environment.",
+			Flag:   "u",
+			Desc:   "Do NOT inherit the environment from current process; or, if generating an init file, do NOT export the current environment.",
 			Preset: false,
 		},
 		GenerateInit: config.BoolFlag{
-			Flag:   "s",
+			Flag:   "i",
 			Desc:   "Print the generated init file instead of using it to start a new shell.",
 			Preset: false,
 		},
@@ -118,15 +137,15 @@ func main() {
 	config.DebugLogHandler = debugLogHandler.String()
 
 	if param := appFlag.Parse(&appProp); !flag.Parsed() {
-		exit.ExitFlagsNotParsed.HaltAnnotated(nil, "flags not parsed")
+		exit.FlagsNotParsed.HaltAnnotated(nil, "flags not parsed")
 	} else if param.ChangeLog {
 		version.PrintChangeLog()
 	} else if param.Version {
 		fmt.Println(appProp.PackageName, "version", version.String())
 	} else if ui, err := cli.Start(param); err != nil {
-		exit.ExitCLINotStarted.HaltAnnotated(err, "CLI not started")
+		exit.CLINotStarted.HaltAnnotated(err, "CLI not started")
 	} else if err := ui.CreateShell(); err != nil {
-		exit.ExitShellNotCreated.HaltAnnotated(err, "shell not created")
+		exit.ShellNotCreated.HaltAnnotated(err, "shell not created")
 	}
-	exit.ExitOK.Halt()
+	exit.OK.Halt()
 }

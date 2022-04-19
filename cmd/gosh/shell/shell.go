@@ -20,11 +20,12 @@ type Shell struct {
 }
 
 // EnvSource contains each of the loadable environments available.
-type EnvSource map[string][]byte
+type ProfileEnv map[string][]byte
 
 // Run executes a new shell with the given parameters and does not return until
 // the shell exits or an error was encountered.
-func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (shellErr error, cmdErr error) {
+
+func Run(p *config.Parameters, l *log.Handler, c *config.Config, s *config.Shell, e *ProfileEnv) (shellErr error, cmdErr error) {
 
 	initFile, profiles, err := writeEnvToFile(p, l, c, e)
 	if err != nil {
@@ -78,20 +79,34 @@ func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (
 
 	} else {
 
-		exp := config.NewArgExpansion(initFile, p.ShellArgs...)
-		arg := exp.ExpandArgs(unique(append([]string{c.Shell}, c.Args...)...)...)
-
-		if "" != p.ShellCommand {
-			arg = append(arg, c.CmdFlag, p.ShellCommand)
-		}
-
 		wd, wdErr := os.Getwd()
 		if nil != wdErr {
 			wd = p.App.HomeDir()
 		}
 
+		var arg []string
+		exp := config.NewArgExpansion(initFile, wd, p.ShellArgs...)
+		if p.ShellCommand == "" {
+			arg = nonEmpty(exp.ExpandArgs(append([]string{s.Exec}, s.Flag.Interactive...)...)...)
+		} else {
+			arg = nonEmpty(exp.ExpandArgs(append([]string{s.Exec}, s.Flag.CommandLine...)...)...)
+		}
+
+		for _, pro := range p.Profiles {
+			done := false
+			if pd, ok := c.Profile[pro]; ok {
+				switch cwd := exp.Expand(pd.Cwd); s := cwd.(type) {
+				case string:
+					wd, done = s, true
+				}
+			}
+			if done {
+				break
+			}
+		}
+
 		l.Context().
-			WithField("shell", c.Shell).
+			WithField("shell", s.Exec).
 			WithField("args", fmt.Sprintf("[%s]", strings.Join(arg, ", "))).
 			WithField("env", fmt.Sprintf("[%s]", strings.Join(env, ", "))).
 			WithField("dir", wd).
@@ -101,7 +116,7 @@ func Run(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (
 			Debug("execute")
 
 		shell := &Shell{Cmd: &exec.Cmd{
-			Path:   c.Shell,
+			Path:   s.Exec,
 			Args:   arg,
 			Env:    env,
 			Dir:    wd,
@@ -157,7 +172,7 @@ func copyInit(out io.Writer, env []string, init string, par *config.Parameters, 
 	return errors.Trace(err)
 }
 
-func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *EnvSource) (string, []string, error) {
+func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *ProfileEnv) (string, []string, error) {
 
 	var env *os.File
 	var err error
@@ -171,7 +186,7 @@ func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *E
 	var pos int64
 
 	seen := map[string]int{}
-	for i, sel := range append([]string{p.App.ReqEnvName}, p.Profiles...) {
+	for i, sel := range append([]string{p.App.ReqProfileName}, p.Profiles...) {
 
 		if _, ok := seen[sel]; ok {
 			continue
@@ -186,10 +201,11 @@ func writeEnvToFile(p *config.Parameters, l *log.Handler, c *config.Config, e *E
 			}
 
 			l.Context().
-				WithField("env", sel).
+				WithField("profile", sel).
+				WithField("env", fmt.Sprintf("[ %s ]", strings.Join(c.Profile[sel].Env, ", "))).
 				WithField("size", fmt.Sprintf("%dB", cnt)).
 				WithField("path", fmt.Sprintf("⮔ %s", env.Name())).
-				Info("activated environment")
+				Info("activated profile")
 		}
 	}
 
@@ -226,4 +242,14 @@ func unique(ls ...string) []string {
 		}
 	}
 	return uniq
+}
+
+func nonEmpty(ls ...string) []string {
+	rs := make([]string, 0, len(ls))
+	for _, a := range ls {
+		if a != "" {
+			rs = append(rs, a)
+		}
+	}
+	return rs
 }

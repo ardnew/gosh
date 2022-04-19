@@ -14,11 +14,13 @@ type ArgExpansion struct {
 
 // NewArgExpansion constructs a new expansion ruleset with given expansion
 // values and compiles the internal key matcher.
-func NewArgExpansion(initFile string, shellArgs ...string) *ArgExpansion {
+func NewArgExpansion(initFile string, workDir string, shellArgs ...string) *ArgExpansion {
 	ae := ArgExpansion{
 		rule: map[string]interface{}{
 			`__GOSH_INIT__`: initFile,
 			`__GOSH_ARGS__`: shellArgs,
+			`__GOSH_CWD__`:  workDir,
+			`__GOSH_PWD__`:  workDir,
 		},
 	}
 	ae.matcher = ae.Compile()

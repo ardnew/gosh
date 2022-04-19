@@ -37,7 +37,7 @@ func Start(param *config.Parameters) (ui *CLI, err error) {
 
 	defer ui.Log.Context().
 		WithField("configPath", param.ConfigPath).
-		WithField("env", param.Profiles).
+		WithField("profiles", fmt.Sprintf("[ %s ]", strings.Join(param.Profiles, ", "))).
 		Trace("initialization").
 		Stop(&err)
 
@@ -66,12 +66,17 @@ func Start(param *config.Parameters) (ui *CLI, err error) {
 // configuration file.
 func (ui *CLI) CreateShell() (err error) {
 
+	sh, ok := ui.Config.Shell[ui.Param.Shell]
+	if !ok {
+		err = errors.Errorf("undefined shell: %s", ui.Param.Shell)
+	}
+
 	defer ui.Log.Context().
-		WithField("shell", ui.Config.Shell).
+		WithField("exec", sh.Exec).
 		Trace("running shell").
 		Stop(&err)
 
-	env := ui.readEnv()
+	env := ui.readProfile()
 	res := make(chan error, 1)
 
 	// controls ability to restart shell
@@ -81,10 +86,10 @@ func (ui *CLI) CreateShell() (err error) {
 		// always remove the restart file immediately
 		ui.removeRestartFile()
 
-		go func(c *CLI, e *shell.EnvSource, r chan error) {
-			shellErr, _ := shell.Run(c.Param, c.Log, c.Config, e)
+		go func(c *CLI, e *shell.ProfileEnv, s *config.Shell, r chan error) {
+			shellErr, _ := shell.Run(c.Param, c.Log, c.Config, s, e)
 			r <- shellErr
-		}(ui, env, res)
+		}(ui, env, &sh, res)
 		err = <-res // block until channel read
 
 		// check if a restart file exists
@@ -97,35 +102,35 @@ func (ui *CLI) CreateShell() (err error) {
 	return
 }
 
-func (ui *CLI) readEnv() *shell.EnvSource {
-
+func (ui *CLI) readProfile() *shell.ProfileEnv {
 	root := filepath.Dir(ui.Param.ConfigPath)
-	source := shell.EnvSource{}
-
-	for _, env := range ui.Config.Env {
-		for name, src := range env {
-			if _, seen := source[name]; seen {
-				ui.Log.Context().
-					WithField("env", name).
-					WithField("reject", "duplicate").
-					Warn("skipping environment")
-
-			} else {
-				dir := filepath.Join(root, name)
-				source[name] = append(source[name], ui.readEnvMod(dir, src...)...)
-				ui.Log.Context().
-					WithField("env", name).
-					WithField("size", fmt.Sprintf("%dB", len(source[name]))).
-					WithField("path", dir).
-					Debug("loaded environment")
+	source := shell.ProfileEnv{}
+	for name, pro := range ui.Config.Profile {
+		if _, seen := source[name]; seen {
+			ui.Log.Context().
+				WithField("profile", name).
+				WithField("reject", "duplicate").
+				Warn("skipping profile")
+		} else {
+			// Insert the profile-specific env before sourcing any of its includes
+			for _, e := range pro.Env {
+				source[name] = append(source[name], e...)
 			}
+			dir := filepath.Join(root, name)
+			source[name] = append(source[name], ui.readProfileMod(dir, pro.Include...)...)
+			ui.Log.Context().
+				WithField("profile", name).
+				WithField("env", fmt.Sprintf("[ %s ]", strings.Join(pro.Env, ", "))).
+				WithField("size", fmt.Sprintf("%dB", len(source[name]))).
+				WithField("path", dir).
+				Debug("loaded profile")
 		}
 	}
 
 	return &source
 }
 
-func (ui *CLI) readEnvMod(path string, mod ...string) []byte {
+func (ui *CLI) readProfileMod(path string, mod ...string) []byte {
 
 	type buf []byte
 
