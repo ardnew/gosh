@@ -15,18 +15,20 @@ var DebugLogHandler string
 // Parameters represents the global configuration of the application, mostly
 // defined or initialized by command-line arguments.
 type Parameters struct {
-	App           AppProperties
-	Version       bool
-	ChangeLog     bool
-	ConfigPath    string
-	ShellCommand  string
-	LogHandler    string
-	DebugEnabled  bool
-	OrphanEnviron bool
-	GenerateInit  bool
-	Shell         string
-	ShellArgs     []string
-	Profiles      ProfileList
+	App            AppProperties
+	Version        bool
+	ChangeLog      bool
+	ConfigPath     string
+	ShellCommand   string
+	LogHandler     string
+	DebugEnabled   bool
+	OrphanEnviron  bool
+	GenerateGoshrc bool
+	Shell          string
+	ShellArgs      []string
+	Profiles       ProfileList
+	LoginShell     bool
+	Interactive    bool
 }
 
 // AppProperties represents constants associated with the running application.
@@ -101,16 +103,18 @@ func (p *ProfileList) Set(value string) error {
 
 // StartFlags contains attributes of the pre-defined command-line flags.
 type StartFlags struct {
-	Version       BoolFlag
-	ChangeLog     BoolFlag
-	ConfigPath    StringFlag
-	ShellCommand  StringFlag
-	LogHandler    StringFlag
-	DebugEnabled  BoolFlag
-	OrphanEnviron BoolFlag
-	GenerateInit  BoolFlag
-	Shell         StringFlag
-	Profiles      ProfileFlag
+	Version        BoolFlag
+	ChangeLog      BoolFlag
+	ConfigPath     StringFlag
+	ShellCommand   StringFlag
+	LogHandler     StringFlag
+	DebugEnabled   BoolFlag
+	OrphanEnviron  BoolFlag
+	GenerateGoshrc BoolFlag
+	Shell          StringFlag
+	Profiles       ProfileFlag
+	LoginShell     BoolFlag
+	Interactive    BoolFlag
 }
 
 // StringFlag contains the attributes of a string type command-line flag.
@@ -135,26 +139,44 @@ type ProfileFlag struct {
 
 // Parse initializes the default flagset and parses command-line flags into the
 // shareable Parameters struct.
-func (sf *StartFlags) Parse(app *AppProperties) *Parameters {
+func (sf *StartFlags) Parse(app *AppProperties) (*Parameters, bool) {
 
-	param := Parameters{App: *app}
+	param := Parameters{App: *app, ShellArgs: []string{}}
 
-	flag.BoolVar(&param.Version, sf.Version.Flag, sf.Version.Preset, sf.Version.Desc)
-	flag.BoolVar(&param.ChangeLog, sf.ChangeLog.Flag, sf.ChangeLog.Preset, sf.ChangeLog.Desc)
-	flag.StringVar(&param.ConfigPath, sf.ConfigPath.Flag, sf.ConfigPath.Preset, sf.ConfigPath.Desc)
-	flag.StringVar(&param.ShellCommand, sf.ShellCommand.Flag, sf.ShellCommand.Preset, sf.ShellCommand.Desc)
-	flag.StringVar(&param.Shell, sf.Shell.Flag, sf.Shell.Preset, sf.Shell.Desc)
-	flag.Var(&param.Profiles, sf.Profiles.Flag, sf.Profiles.Desc)
-	flag.StringVar(&param.LogHandler, sf.LogHandler.Flag, sf.LogHandler.Preset, sf.LogHandler.Desc)
-	flag.BoolVar(&param.DebugEnabled, sf.DebugEnabled.Flag, sf.DebugEnabled.Preset, sf.DebugEnabled.Desc)
-	flag.BoolVar(&param.OrphanEnviron, sf.OrphanEnviron.Flag, sf.OrphanEnviron.Preset, sf.OrphanEnviron.Desc)
-	flag.BoolVar(&param.GenerateInit, sf.GenerateInit.Flag, sf.GenerateInit.Preset, sf.GenerateInit.Desc)
-	flag.Parse()
+	fl := flag.NewFlagSet(app.PackageName, flag.ExitOnError)
+
+	fl.BoolVar(&param.Version, sf.Version.Flag, sf.Version.Preset, sf.Version.Desc)
+	fl.BoolVar(&param.ChangeLog, sf.ChangeLog.Flag, sf.ChangeLog.Preset, sf.ChangeLog.Desc)
+	fl.StringVar(&param.ConfigPath, sf.ConfigPath.Flag, sf.ConfigPath.Preset, sf.ConfigPath.Desc)
+	fl.StringVar(&param.ShellCommand, sf.ShellCommand.Flag, sf.ShellCommand.Preset, sf.ShellCommand.Desc)
+	fl.StringVar(&param.Shell, sf.Shell.Flag, sf.Shell.Preset, sf.Shell.Desc)
+	fl.Var(&param.Profiles, sf.Profiles.Flag, sf.Profiles.Desc)
+	fl.StringVar(&param.LogHandler, sf.LogHandler.Flag, sf.LogHandler.Preset, sf.LogHandler.Desc)
+	fl.BoolVar(&param.DebugEnabled, sf.DebugEnabled.Flag, sf.DebugEnabled.Preset, sf.DebugEnabled.Desc)
+	fl.BoolVar(&param.OrphanEnviron, sf.OrphanEnviron.Flag, sf.OrphanEnviron.Preset, sf.OrphanEnviron.Desc)
+	fl.BoolVar(&param.GenerateGoshrc, sf.GenerateGoshrc.Flag, sf.GenerateGoshrc.Preset, sf.GenerateGoshrc.Desc)
+	fl.BoolVar(&param.LoginShell, sf.LoginShell.Flag, sf.LoginShell.Preset, sf.LoginShell.Desc)
+	fl.BoolVar(&param.Interactive, sf.Interactive.Flag, sf.Interactive.Preset, sf.Interactive.Desc)
+
+	argv := []string{}
+	parg := &argv
+	for _, a := range os.Args[1:] {
+		if a == "--" {
+			parg = &param.ShellArgs
+		} else {
+			*parg = append(*parg, a)
+		}
+	}
+	fl.Parse(argv)
+
+	// Prepend the unhandled arguments preceding end of argument list "--" to
+	// those following it.
+	param.ShellArgs = append(fl.Args(), param.ShellArgs...)
 
 	// create a map of all flags actually provided by the user
 	type values []flag.Value
 	given := map[string]values{}
-	flag.Visit(func(f *flag.Flag) {
+	fl.Visit(func(f *flag.Flag) {
 		if _, ok := given[f.Name]; !ok {
 			given[f.Name] = values{}
 		}
@@ -168,20 +190,5 @@ func (sf *StartFlags) Parse(app *AppProperties) *Parameters {
 		}
 	}
 
-	param.ShellArgs = make([]string, len(flag.Args())+2)
-	if param.ShellCommand != "" {
-		// The first non-flag-option argument will be passed in as $0.
-		// This can have the apparent effect of a missing command-line parameter to
-		// the user. So instead, we artifically insert our own package name as the
-		// first argument, which will apppear in error and warning messages.
-		// Alternatively, we could insert param.Shell if it is provided; if it is
-		// not provided, this would appear as "auto" until we parse the YAML config.
-		// This seems overly complex at the moment, and we know for a fact our own
-		// package name exists, so just use it instead.
-		param.ShellArgs = append(param.ShellArgs, param.ShellCommand, app.PackageName)
-	}
-	param.ShellArgs = append(param.ShellArgs, flag.Args()...)
-//	copy(param.ShellArgs[1:], flag.Args())
-
-	return &param
+	return &param, fl.Parsed()
 }

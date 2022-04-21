@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"strings"
 
@@ -58,9 +57,19 @@ func init() {
 				`% Major refactor of configuration YAML format:`,
 				`|  + Per-profile initial working directory and env definitions`,
 				`|  + (Placeholder stub for profile inheritance)`,
+				`|  + Rename GOSH_INIT to GOSH_RCFILE`,
 				`|  + Support for multiple shell definitions`,
 				`+ Override which shell is executed with flag -e`,
 				`% Proper handling of args in non-interactive shells with flag -c`,
+			},
+		},
+		{
+			Package: "gosh",
+			Version: "0.4.1",
+			Date:    "April 20, 2022",
+			Description: []string{
+				`+ Add support for login/interactive/command shells`,
+				`+ Add handling of end-of-options delimiter "--"`,
 			},
 		},
 	}
@@ -96,24 +105,19 @@ func main() {
 			Desc:   "Use an alternate configuration file located at `path`. Profile paths are relative to this configuration file.",
 			Preset: appProp.ConfigPath(),
 		},
-		ShellCommand: config.StringFlag{
-			Flag:   "c",
-			Desc:   "Run `command` with modified environment instead of starting a new shell.",
-			Preset: "",
-		},
 		Shell: config.StringFlag{
 			Flag:   "e",
 			Desc:   "Use executable and paramter templates named `shell` in configuration file.",
 			Preset: appProp.ReqShellName,
 		},
 		LogHandler: config.StringFlag{
-			Flag:   "l",
+			Flag:   "o",
 			Desc:   fmt.Sprintf("Specify the output log `format` [%s].", strings.Join(log.IdentNames(), ", ")),
 			Preset: log.LogDefaultIdent.String(),
 		},
 		DebugEnabled: config.BoolFlag{
 			Flag:   "g",
-			Desc:   fmt.Sprintf("Enable debug message logging (implies [-l %q] unless log format specified).", debugLogHandler.String()),
+			Desc:   fmt.Sprintf("Enable debug message logging (implies [-o %q] if not provided).", debugLogHandler.String()),
 			Preset: false,
 		},
 		// reversed logic for inherit because I suspect inheriting is the preferred
@@ -123,20 +127,35 @@ func main() {
 			Desc:   "Do NOT inherit the environment from current process; or, if generating an init file, do NOT export the current environment.",
 			Preset: false,
 		},
-		GenerateInit: config.BoolFlag{
-			Flag:   "i",
-			Desc:   "Print the generated init file instead of using it to start a new shell.",
+		GenerateGoshrc: config.BoolFlag{
+			Flag:   "d",
+			Desc:   "Print the generated goshrc file instead of using it to start a new shell.",
 			Preset: false,
 		},
 		Profiles: config.ProfileFlag{
 			Flag: "p",
 			Desc: "Load files defined in configuration `profile`; may be specified multiple times.",
 		},
+		ShellCommand: config.StringFlag{
+			Flag:   "c",
+			Desc:   "Run `command` directly in a shell; use the \"commandline\" flags defined in configuration file.",
+			Preset: "",
+		},
+		LoginShell: config.BoolFlag{
+			Flag:   "l",
+			Desc:   "Behave as a login shell; use the \"loginshell\" flags defined in configuration file.",
+			Preset: false,
+		},
+		Interactive: config.BoolFlag{
+			Flag:   "i",
+			Desc:   "Behave as an interactive shell; use the \"interactive\" flags defined in configuration file.",
+			Preset: true,
+		},
 	}
 
 	config.DebugLogHandler = debugLogHandler.String()
 
-	if param := appFlag.Parse(&appProp); !flag.Parsed() {
+	if param, parsed := appFlag.Parse(&appProp); !parsed {
 		exit.FlagsNotParsed.HaltAnnotated(nil, "flags not parsed")
 	} else if param.ChangeLog {
 		version.PrintChangeLog()

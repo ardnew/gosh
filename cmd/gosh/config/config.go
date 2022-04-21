@@ -24,12 +24,10 @@ type Shell struct {
 }
 
 // Flags defines the template argument lists passed to the shell.
-//
-// Do NOT include the command name at index 0 (as required); it is added
-// automatically.
 type Flags struct {
-	Interactive []string `yaml:"interactive,flow"`
 	CommandLine []string `yaml:"commandline,flow"`
+	Interactive []string `yaml:"interactive,flow"`
+	LoginShell  []string `yaml:"loginshell,flow"`
 }
 
 // Shells maps names of shells to their respective configuration attributes.
@@ -61,6 +59,10 @@ func ParseFile(filePath string) (*Config, error) {
 }
 
 // String returns a string representation of the receiver Config.
-func (cfg *Config) String() string {
-	return fmt.Sprintf("%+v", *cfg)
+func (cfg Config) String() string {
+	return fmt.Sprintf("{Shell:%+v Profile:%+v}", cfg.Shell, cfg.Profile)
+}
+
+func (pro Profile) String() string {
+	return fmt.Sprintf("{Cwd:%s Include:%+v}", pro.Cwd, pro.Include)
 }

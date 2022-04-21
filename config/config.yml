@@ -3,8 +3,15 @@ shell:
   auto:
     exec: /usr/local/bin/bash
     flag:
-      interactive: [ --rcfile, __GOSH_INIT__, __GOSH_ARGS__ ]
-      commandline: [ -c, __GOSH_ARGS__ ]
+      commandline: [ --rcfile, __RCFILE__, -i, -c, __CMD__, __PKG__, __ARGS__ ]
+      interactive: [ --rcfile, __RCFILE__, -i, __ARGS__ ]
+      loginshell:  [ --rcfile, __RCFILE__, -l, __ARGS__ ]
+  tmux:
+    exec: /usr/local/bin/tmux
+    flag:
+      commandline: [ -u, -2, -c, __CMD__, __ARGS__ ]
+      interactive: [ -u, -2, new-session, -A, -D, -s, __PKG__, gosh, __ARGS__ ]
+      loginshell:  [ -u, -2, -l, new-session, -A, -D, -s, __PKG__, gosh, __ARGS__ ]
 
 profile:
   auto:
@@ -98,4 +105,10 @@ profile:
       - functions.bash
       - aliases.bash
       - completion.bash
+  freebsd:
+    cwd: __PWD__
+    env: []
+    inherit: []
+    include:
+      - paths.bash
 

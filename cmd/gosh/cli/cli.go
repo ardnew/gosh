@@ -14,12 +14,6 @@ import (
 	"github.com/juju/errors"
 )
 
-// RestartFileBase generates the basename of the restart file for the current
-// process.
-var RestartFileBase = func() string {
-	return fmt.Sprintf(".restart.%d", os.Getpid())
-}
-
 // CLI represents the properties of an active command-line session.
 type CLI struct {
 	Param  *config.Parameters
@@ -71,34 +65,15 @@ func (ui *CLI) CreateShell() (err error) {
 		err = errors.Errorf("undefined shell: %s", ui.Param.Shell)
 	}
 
-	defer ui.Log.Context().
-		WithField("exec", sh.Exec).
-		Trace("running shell").
-		Stop(&err)
+	ctx := ui.Log.Context().WithField("exec", sh.Exec)
 
-	env := ui.readProfile()
-	res := make(chan error, 1)
-
-	// controls ability to restart shell
-	startShell := true
-
-	for startShell {
-		// always remove the restart file immediately
-		ui.removeRestartFile()
-
-		go func(c *CLI, e *shell.ProfileEnv, s *config.Shell, r chan error) {
-			shellErr, _ := shell.Run(c.Param, c.Log, c.Config, s, e)
-			r <- shellErr
-		}(ui, env, &sh, res)
-		err = <-res // block until channel read
-
-		// check if a restart file exists
-		var selected string
-		if selected, startShell = ui.readRestartFile(); startShell {
-			// scan its contents into the selected-environments parameters
-			ui.Param.Profiles = ui.splitDataRestartFile(selected)
-		}
+	if ui.Param.ShellCommand == "" {
+		defer ctx.Trace("running shell").Stop(&err)
+	} else {
+		ctx.Info("running command")
 	}
+
+	err, _ = shell.Run(ui.Param, ui.Log, ui.Config, &sh, ui.readProfile())
 	return
 }
 
@@ -159,35 +134,4 @@ func (ui *CLI) readProfileMod(path string, mod ...string) []byte {
 		env = append(env, b...)
 	}
 	return env
-}
-
-func (ui *CLI) splitDataRestartFile(selected string) []string {
-	return strings.Fields(selected)
-}
-
-func (ui *CLI) joinDataRestartFile(selected ...string) string {
-	for i, s := range selected {
-		selected[i] = strings.TrimSpace(s)
-	}
-	return strings.Join(selected, " ")
-}
-
-func (ui *CLI) readRestartFile() (string, bool) {
-	path := filepath.Join(filepath.Dir(ui.Param.ConfigPath), RestartFileBase())
-	bytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		return "", false
-	}
-	selected := string(bytes)
-	return selected, selected != ""
-}
-
-func (ui *CLI) writeRestartFile(selected string) {
-	path := filepath.Join(filepath.Dir(ui.Param.ConfigPath), RestartFileBase())
-	_ = ioutil.WriteFile(path, []byte(selected), ui.Param.App.PermConfigFile)
-}
-
-func (ui *CLI) removeRestartFile() {
-	path := filepath.Join(filepath.Dir(ui.Param.ConfigPath), RestartFileBase())
-	_ = os.Remove(path)
 }
