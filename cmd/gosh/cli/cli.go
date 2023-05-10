@@ -26,7 +26,7 @@ func Start(param *config.Parameters) (ui *CLI, err error) {
 
 	ui = &CLI{
 		Param: param,
-		Log:   log.NewHandler(os.Stdout, param),
+		Log:   log.NewHandler(param),
 	}
 
 	defer ui.Log.Context().

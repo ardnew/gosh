@@ -2,7 +2,6 @@ package log
 
 import (
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/ardnew/gosh/cmd/gosh/config"
@@ -24,7 +23,7 @@ type Handler struct {
 }
 
 // NewHandler generates a logging interface based on user's given parameters.
-func NewHandler(out io.Writer, param *config.Parameters) *Handler {
+func NewHandler(param *config.Parameters) *Handler {
 
 	id := ParseIdent(param.LogHandler)
 
@@ -32,11 +31,11 @@ func NewHandler(out io.Writer, param *config.Parameters) *Handler {
 	case LogNull:
 		log.SetHandler(discard.New())
 	case LogStandard:
-		log.SetHandler(cli.New(out))
+		log.SetHandler(cli.New(param.LogWriter))
 	case LogASCII:
-		log.SetHandler(text.New(out))
+		log.SetHandler(text.New(param.LogWriter))
 	case LogJSON:
-		log.SetHandler(json.New(out))
+		log.SetHandler(json.New(param.LogWriter))
 	}
 
 	var ctx log.Interface

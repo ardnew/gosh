@@ -16,6 +16,7 @@ const (
 	FlagsNotParsed  Code = 1
 	CLINotStarted   Code = 2
 	ShellNotCreated Code = 3
+	InvalidFlags    Code = 4
 )
 
 // Halt terminates program execution with the receiver's exit code.

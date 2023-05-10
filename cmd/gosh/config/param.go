@@ -3,14 +3,20 @@ package config
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
-	// "github.com/juju/errors"
+	"unicode"
 )
 
-// default log handler when debug enabled (set in main.go:main)
-var DebugLogHandler string
+// Default log handler when debug enabled (set in main.go:main).
+// These may also be overridden via environment variable GOSH_DEBUG.
+// However, priority is always given command-line flags (-o and -w).
+var (
+	DebugLogHandler string
+	DebugLogPath    string
+)
 
 // Parameters represents the global configuration of the application, mostly
 // defined or initialized by command-line arguments.
@@ -21,6 +27,8 @@ type Parameters struct {
 	ConfigPath     string
 	ShellCommand   string
 	LogHandler     string
+	LogPath        string
+	LogWriter      io.Writer
 	DebugEnabled   bool
 	OrphanEnviron  bool
 	GenerateGoshrc bool
@@ -34,12 +42,15 @@ type Parameters struct {
 // AppProperties represents constants associated with the running application.
 type AppProperties struct {
 	PackageName    string
+	EnvDebugName   string
+	EnvDebugDelim  string
 	EnvConfigName  string
 	FileConfigName string
 	ReqProfileName string
 	ReqShellName   string
 	PermConfigFile os.FileMode
 	PermConfigDir  os.FileMode
+	PermLogFile    os.FileMode
 }
 
 // ConfigPath provides the default YAML configuration file path when not
@@ -108,6 +119,7 @@ type StartFlags struct {
 	ConfigPath     StringFlag
 	ShellCommand   StringFlag
 	LogHandler     StringFlag
+	LogPath        StringFlag
 	DebugEnabled   BoolFlag
 	OrphanEnviron  BoolFlag
 	GenerateGoshrc BoolFlag
@@ -139,7 +151,7 @@ type ProfileFlag struct {
 
 // Parse initializes the default flagset and parses command-line flags into the
 // shareable Parameters struct.
-func (sf *StartFlags) Parse(app *AppProperties) (*Parameters, bool) {
+func (sf *StartFlags) Parse(app *AppProperties) (*Parameters, bool, error) {
 
 	param := Parameters{App: *app, ShellArgs: []string{}}
 
@@ -152,6 +164,7 @@ func (sf *StartFlags) Parse(app *AppProperties) (*Parameters, bool) {
 	fl.StringVar(&param.Shell, sf.Shell.Flag, sf.Shell.Preset, sf.Shell.Desc)
 	fl.Var(&param.Profiles, sf.Profiles.Flag, sf.Profiles.Desc)
 	fl.StringVar(&param.LogHandler, sf.LogHandler.Flag, sf.LogHandler.Preset, sf.LogHandler.Desc)
+	fl.StringVar(&param.LogPath, sf.LogPath.Flag, sf.LogPath.Preset, sf.LogPath.Desc)
 	fl.BoolVar(&param.DebugEnabled, sf.DebugEnabled.Flag, sf.DebugEnabled.Preset, sf.DebugEnabled.Desc)
 	fl.BoolVar(&param.OrphanEnviron, sf.OrphanEnviron.Flag, sf.OrphanEnviron.Preset, sf.OrphanEnviron.Desc)
 	fl.BoolVar(&param.GenerateGoshrc, sf.GenerateGoshrc.Flag, sf.GenerateGoshrc.Preset, sf.GenerateGoshrc.Desc)
@@ -183,12 +196,56 @@ func (sf *StartFlags) Parse(app *AppProperties) (*Parameters, bool) {
 		given[f.Name] = append(given[f.Name], f.Value)
 	})
 
-	// if debug flag given and no log handler specified, use standard log handler
-	if param.DebugEnabled && (DebugLogHandler != "") {
-		if _, logGiven := given[sf.LogHandler.Flag]; !logGiven {
+	_, handlerGiven := given[sf.LogHandler.Flag]
+	_, pathGiven := given[sf.LogPath.Flag]
+
+	if param.DebugEnabled {
+		// DebugLogHandler and DebugLogWriter are set in main.go:main(), and they
+		// are the default handler/writer when only the debug flag (-g) is given.
+		if !handlerGiven {
 			param.LogHandler = DebugLogHandler
+		}
+		if !pathGiven {
+			param.LogPath = DebugLogPath
 		}
 	}
 
-	return &param, fl.Parsed()
+	if !param.DebugEnabled && !pathGiven {
+		param.LogWriter = io.Discard
+	} else {
+		path, oflg := parseOpenFlag(param.LogPath)
+		switch path[0] {
+		case '-':
+			param.LogWriter = os.Stdout
+		case '+':
+			param.LogWriter = os.Stderr
+		default:
+			wo, err := os.OpenFile(path, oflg, os.ModePerm&app.PermLogFile)
+			if err != nil {
+				return &param, fl.Parsed(), err
+			}
+			param.LogWriter = wo
+		}
+	}
+
+	return &param, fl.Parsed(), nil
+}
+
+func parseOpenFlag(modePath string) (string, int) {
+	prefix, carets := true, 0
+	path := strings.TrimLeftFunc(modePath, func(r rune) bool {
+		if prefix {
+			if r == '>' && carets < 2 {
+				carets++
+			} else {
+				prefix = unicode.IsSpace(r)
+			}
+		}
+		return prefix
+	})
+	oflg := os.O_WRONLY | os.O_CREATE
+	if carets == 2 {
+		oflg |= os.O_APPEND
+	}
+	return path, oflg
 }

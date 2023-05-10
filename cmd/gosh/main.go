@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/ardnew/gosh/cmd/gosh/cli"
@@ -72,21 +73,59 @@ func init() {
 				`+ Add handling of end-of-options delimiter "--"`,
 			},
 		},
+		{
+			Package: "gosh",
+			Version: "0.4.2",
+			Date:    "May 10, 2023",
+			Description: []string{
+				`+ Add support for logging debug output to file/stdout/stderr`,
+				`+ Add support for specifying overwrite or append with flag -w`,
+				`% Debug logging can now also be enabled via environment variable`,
+				`|  + Variable identifier is GOSH_DEBUG`,
+				`|  + Value has format "[handler,]writer"`,
+				`|  + "writer" accepts the same values as flag -w`,
+				`|  + "handler" (optional) accepts the same values as flag -o`,
+			},
+		},
 	}
 }
 
 func main() {
 
-	const debugLogHandler = log.LogStandard
-
 	appProp := config.AppProperties{
 		PackageName:    "gosh",
+		EnvDebugName:   "GOSH_DEBUG",
+		EnvDebugDelim:  ",",
 		EnvConfigName:  "GOSH_CONFIG",
 		FileConfigName: "config.yml",
 		ReqShellName:   "auto",
 		ReqProfileName: "auto",
 		PermConfigFile: 0o600,
 		PermConfigDir:  0o700,
+		PermLogFile:    0o600,
+	}
+
+	var debugImplied bool
+
+	config.DebugLogHandler = "standard"
+	config.DebugLogPath = "-"
+
+	// Perform the debug log processing for the "config" package, because it
+	// cannot import our "log" package (circular imports).
+	if debugLog, debugEnv := os.LookupEnv(appProp.EnvDebugName); debugEnv {
+		debugImplied = true
+		for _, hid := range log.IdentNames() {
+			if strings.HasPrefix(debugLog, hid) {
+				config.DebugLogHandler = hid
+				if len(debugLog) > len(hid) {
+					config.DebugLogPath = debugLog[len(hid):]
+				}
+			}
+		}
+		config.DebugLogPath = strings.TrimPrefix(
+			config.DebugLogPath,
+			appProp.EnvDebugDelim,
+		)
 	}
 
 	appFlag := config.StartFlags{
@@ -115,10 +154,15 @@ func main() {
 			Desc:   fmt.Sprintf("Specify the output log `format` [%s].", strings.Join(log.IdentNames(), ", ")),
 			Preset: log.LogDefaultIdent.String(),
 		},
+		LogPath: config.StringFlag{
+			Flag:   "w",
+			Desc:   "Write all log messages to file `path`. Use \"-\" for stdout or \"+\" for stderr. If path is prefixed with \">>\", messages will be appended to the given file. Otherwise, or if prefixed with \">\", the log file is overwritten.",
+			Preset: "",
+		},
 		DebugEnabled: config.BoolFlag{
 			Flag:   "g",
-			Desc:   fmt.Sprintf("Enable debug message logging (implies [-o %q] if not provided).", debugLogHandler.String()),
-			Preset: false,
+			Desc:   fmt.Sprintf("Enable debug message logging (implies [-o %q] if not provided).", config.DebugLogHandler),
+			Preset: debugImplied,
 		},
 		// reversed logic for inherit because I suspect inheriting is the preferred
 		// or typical behavior. thus, user adds the flag for atypical behavior.
@@ -153,10 +197,10 @@ func main() {
 		},
 	}
 
-	config.DebugLogHandler = debugLogHandler.String()
-
-	if param, parsed := appFlag.Parse(&appProp); !parsed {
+	if param, parsed, err := appFlag.Parse(&appProp); !parsed {
 		exit.FlagsNotParsed.HaltAnnotated(nil, "flags not parsed")
+	} else if err != nil {
+		exit.InvalidFlags.HaltAnnotated(err, "invalid flag(s)")
 	} else if param.ChangeLog {
 		version.PrintChangeLog()
 	} else if param.Version {

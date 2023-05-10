@@ -61,8 +61,10 @@ func Run(root, out, sym string, p pkg.Pkg) {
 	goimports, err := execCmd(out, "goimports", "-w", srcMain)
 	if nil != err {
 		fmt.Printf("error: goimports: %v\n", err)
-		fmt.Printf("tip: make sure goimports is installed (and in your PATH):\n")
-		fmt.Printf("	go get -v golang.org/x/tools/cmd/goimports\n")
+		fmt.Println()
+		fmt.Printf("  | tip: make sure goimports is installed (and in your PATH):\n")
+		fmt.Printf("  |   go install -v golang.org/x/tools/cmd/goimports@latest\n")
+		fmt.Println()
 		os.Exit(2)
 	} else if len(goimports) > 0 {
 		fmt.Printf("%s\n", goimports)
