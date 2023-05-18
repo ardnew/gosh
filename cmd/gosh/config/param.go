@@ -42,6 +42,7 @@ type Parameters struct {
 // AppProperties represents constants associated with the running application.
 type AppProperties struct {
 	PackageName    string
+	FileEnvName    string
 	EnvDebugName   string
 	EnvDebugDelim  string
 	EnvConfigName  string
@@ -69,6 +70,21 @@ func (app *AppProperties) ConfigPath() string {
 		return config
 	}
 	return filepath.Join(osConfigDir(), app.FileConfigName)
+}
+
+// SourceEnvPath provides the path to a file containing environment variable
+// key-value pairs to source prior to running.
+func (app *AppProperties) SourceEnvPath() string {
+	osConfigDir := func() string {
+		config, err := os.UserConfigDir()
+		if err != nil {
+			// path to FreeDesktop's definition of $XDG_CONFIG_HOME
+			const configDefault = ".config"
+			config = filepath.Join(app.HomeDir(), configDefault)
+		}
+		return filepath.Join(config, app.PackageName)
+	}
+	return filepath.Join(osConfigDir(), app.FileEnvName)
 }
 
 // HomeDir provides an absolute path to the user's home directory. Note that if

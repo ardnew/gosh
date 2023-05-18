@@ -10,6 +10,8 @@ import (
 	"github.com/ardnew/gosh/cmd/gosh/exit"
 	"github.com/ardnew/gosh/cmd/gosh/log"
 
+	"github.com/joho/godotenv"
+
 	"github.com/ardnew/version"
 )
 
@@ -87,6 +89,14 @@ func init() {
 				`|  + "handler" (optional) accepts the same values as flag -o`,
 			},
 		},
+		{
+			Package: "gosh",
+			Version: "0.4.3",
+			Date:    "May 18, 2023",
+			Description: []string{
+				`+ Support preloading an environment file for initialization`,
+			},
+		},
 	}
 }
 
@@ -94,6 +104,7 @@ func main() {
 
 	appProp := config.AppProperties{
 		PackageName:    "gosh",
+		FileEnvName:    "env",
 		EnvDebugName:   "GOSH_DEBUG",
 		EnvDebugDelim:  ",",
 		EnvConfigName:  "GOSH_CONFIG",
@@ -105,27 +116,45 @@ func main() {
 		PermLogFile:    0o600,
 	}
 
+	godotenv.Load(appProp.SourceEnvPath())
+
+	var debugLog string
 	var debugImplied bool
+
+	defHand := log.LogDefaultIdent.String()
+	defPath := ""
 
 	config.DebugLogHandler = "standard"
 	config.DebugLogPath = "-"
 
 	// Perform the debug log processing for the "config" package, because it
 	// cannot import our "log" package (circular imports).
-	if debugLog, debugEnv := os.LookupEnv(appProp.EnvDebugName); debugEnv {
-		debugImplied = true
-		for _, hid := range log.IdentNames() {
-			if strings.HasPrefix(debugLog, hid) {
-				config.DebugLogHandler = hid
-				if len(debugLog) > len(hid) {
-					config.DebugLogPath = debugLog[len(hid):]
-				}
+	if debugLog, debugImplied = os.LookupEnv(appProp.EnvDebugName); debugImplied {
+		logHand := config.DebugLogHandler
+		logPath := config.DebugLogPath
+		lhs, rhs, isDelimited := strings.Cut(debugLog, appProp.EnvDebugDelim)
+		if isDelimited {
+			if hid, ok := log.ParseIdent(lhs); ok {
+				logHand = hid.String()
+			}
+			if rhs != "" {
+				logPath = rhs
+			}
+		} else {
+			if hid, ok := log.ParseIdent(lhs); ok {
+				logHand = hid.String()
+				logPath = config.DebugLogPath
+			} else if lhs != "" {
+				logPath = lhs
 			}
 		}
-		config.DebugLogPath = strings.TrimPrefix(
-			config.DebugLogPath,
-			appProp.EnvDebugDelim,
-		)
+		config.DebugLogHandler = logHand
+		config.DebugLogPath = logPath
+	}
+
+	if debugImplied {
+		defHand = config.DebugLogHandler
+		defPath = config.DebugLogPath
 	}
 
 	appFlag := config.StartFlags{
@@ -152,12 +181,12 @@ func main() {
 		LogHandler: config.StringFlag{
 			Flag:   "o",
 			Desc:   fmt.Sprintf("Specify the output log `format` [%s].", strings.Join(log.IdentNames(), ", ")),
-			Preset: log.LogDefaultIdent.String(),
+			Preset: defHand,
 		},
 		LogPath: config.StringFlag{
 			Flag:   "w",
 			Desc:   "Write all log messages to file `path`. Use \"-\" for stdout or \"+\" for stderr. If path is prefixed with \">>\", messages will be appended to the given file. Otherwise, or if prefixed with \">\", the log file is overwritten.",
-			Preset: "",
+			Preset: defPath,
 		},
 		DebugEnabled: config.BoolFlag{
 			Flag:   "g",

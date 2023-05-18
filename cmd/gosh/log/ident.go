@@ -23,7 +23,7 @@ const (
 )
 
 // ParseIdent tries to match the user's given input to an Ident.
-func ParseIdent(str string) Ident {
+func ParseIdent(str string) (Ident, bool) {
 	isMatch := func(p string, s string) bool {
 		ok, err := regexp.MatchString(`^`+p+`$`, s)
 		if err != nil {
@@ -34,13 +34,15 @@ func ParseIdent(str string) Ident {
 	}
 	str = strings.ToLower(strings.TrimSpace(str))
 	if isMatch(`((/?dev/?)?null|no(ne)?)`, str) {
-		return LogNull
+		return LogNull, true
 	} else if isMatch(`(ascii|(plain-?)?te?xt|plain(-?te?xt)?)`, str) {
-		return LogASCII
+		return LogASCII, true
 	} else if isMatch(`(js(on)?|jq)`, str) {
-		return LogJSON
+		return LogJSON, true
+	} else if isMatch(`(standard|default|graphic.*|ansi|x?term.*|(u?rx)?vt(-?\d+))`, str) {
+		return LogStandard, true
 	} else {
-		return LogStandard
+		return LogNull, false
 	}
 }
 

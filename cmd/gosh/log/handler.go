@@ -25,7 +25,7 @@ type Handler struct {
 // NewHandler generates a logging interface based on user's given parameters.
 func NewHandler(param *config.Parameters) *Handler {
 
-	id := ParseIdent(param.LogHandler)
+	id, _ := ParseIdent(param.LogHandler)
 
 	switch id {
 	case LogNull:
