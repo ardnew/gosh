@@ -39,7 +39,7 @@ type Parameters struct {
 	Interactive    bool
 }
 
-// AppProperties represents constants associated with the running application.
+// AppProperties represents constants associated with the running applicatioo.
 type AppProperties struct {
 	PackageName    string
 	FileEnvName    string
@@ -128,6 +128,29 @@ func (p *ProfileList) Set(value string) error {
 	return nil
 }
 
+type ProfileFileList []string
+
+func (p *ProfileFileList) String() string {
+  q := []string{}
+  for _, s := range *p {
+    q = append(q, fmt.Sprintf("%q", s))
+  }
+  return fmt.Sprintf("[%s]", strings.Join(q, ", "))
+}
+
+func (p *ProfileFileList) Set(value string) error {
+	if strings.TrimSpace(value) == "" {
+		return fmt.Errorf("(empty)")
+	}
+	for _, k := range *p {
+		if k == value {
+			return fmt.Errorf("duplicate file name: %q", value)
+		}
+	}
+	*p = append(*p, value)
+	return nil
+}
+
 // StartFlags contains attributes of the pre-defined command-line flags.
 type StartFlags struct {
 	Version        BoolFlag
@@ -141,6 +164,7 @@ type StartFlags struct {
 	GenerateGoshrc BoolFlag
 	Shell          StringFlag
 	Profiles       ProfileFlag
+  AddToProfiles  ProfileAddFlag
 	LoginShell     BoolFlag
 	Interactive    BoolFlag
 }
@@ -165,11 +189,17 @@ type ProfileFlag struct {
 	Desc string
 }
 
+type ProfileAddFlag struct {
+  Flag string
+  Desc string
+}
+
 // Parse initializes the default flagset and parses command-line flags into the
 // shareable Parameters struct.
 func (sf *StartFlags) Parse(app *AppProperties) (*Parameters, bool, error) {
 
 	param := Parameters{App: *app, ShellArgs: []string{}}
+  addToProfiles := ProfileFileList{}
 
 	fl := flag.NewFlagSet(app.PackageName, flag.ExitOnError)
 
@@ -184,6 +214,7 @@ func (sf *StartFlags) Parse(app *AppProperties) (*Parameters, bool, error) {
 	fl.BoolVar(&param.DebugEnabled, sf.DebugEnabled.Flag, sf.DebugEnabled.Preset, sf.DebugEnabled.Desc)
 	fl.BoolVar(&param.OrphanEnviron, sf.OrphanEnviron.Flag, sf.OrphanEnviron.Preset, sf.OrphanEnviron.Desc)
 	fl.BoolVar(&param.GenerateGoshrc, sf.GenerateGoshrc.Flag, sf.GenerateGoshrc.Preset, sf.GenerateGoshrc.Desc)
+  fl.Var(&addToProfiles, sf.AddToProfiles.Flag, sf.AddToProfiles.Desc)
 	fl.BoolVar(&param.LoginShell, sf.LoginShell.Flag, sf.LoginShell.Preset, sf.LoginShell.Desc)
 	fl.BoolVar(&param.Interactive, sf.Interactive.Flag, sf.Interactive.Preset, sf.Interactive.Desc)
 
@@ -244,7 +275,25 @@ func (sf *StartFlags) Parse(app *AppProperties) (*Parameters, bool, error) {
 		}
 	}
 
+  param.touch(addToProfiles...)
+
 	return &param, fl.Parsed(), nil
+}
+
+func (par *Parameters) touch(filename ...string) bool {
+  for _, pro := range filename {
+    pp := filepath.Join(par.App.ConfigPath(), pro)
+    if err := os.MkdirAll(filepath.Dir(pp), os.ModePerm&par.App.PermConfigDir); err != nil {
+      return false
+    }
+    wo, err := os.OpenFile(pp, 
+      os.O_WRONLY | os.O_CREATE | os.O_APPEND, os.ModePerm&par.App.PermConfigFile)
+    if err != nil {
+      return false
+    }
+    defer wo.Close()
+  }
+  return true
 }
 
 func parseOpenFlag(modePath string) (string, int) {

@@ -205,6 +205,10 @@ func main() {
 			Desc:   "Print the generated goshrc file instead of using it to start a new shell.",
 			Preset: false,
 		},
+    AddToProfiles: config.ProfileAddFlag{
+      Flag: "A",
+      Desc: "Add file `name` to each of the profiles selected via \"-p profile\" (or \"auto\" if no profiles selected). Use a comma \",\" delimiter to add multiple files or pass each file as a separate flag.",
+    },
 		Profiles: config.ProfileFlag{
 			Flag: "p",
 			Desc: "Load files defined in configuration `profile`; may be specified multiple times.",
